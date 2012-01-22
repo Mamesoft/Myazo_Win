@@ -87,8 +87,12 @@
     <ClInclude Include="Json.h" />
     <ClInclude Include="Myazo.h" />
     <ClInclude Include="PNGFile.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="ShareHeaders.h" />
     <ClInclude Include="Window.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="app.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

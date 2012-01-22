@@ -3,7 +3,7 @@
 
 namespace Json
 {
-	enum Type
+	enum ItemType
 	{
 		Int,
 		Double,
@@ -17,14 +17,33 @@ namespace Json
 	class Item
 	{
 	private:
+		long long* Int_Value;
+		double* Double_Value;
+		bool* Bool_Value;
+		std::wstring* String_Value;
+		std::map<std::wstring,Item*>* Hash_Value;
+		std::vector<Item*>* Array_Value;
+		ItemType Type;
+		bool IsNull_Value;
 
-		long long* Int;
-		double* Double;
-		bool* Bool;
-		std::wstring* String;
-		std::map<std::wstring,Item>* Hash;
-		std::vector<Item>* Array;
-
+		Item(const Item&);
+		
+	public:
+		Item(void);
+		Item(long long& Int);
+		Item(double& Double);
+		Item(bool& Bool);
+		Item(std::wstring& String);
+		Item(std::map<std::wstring,Item*>& Hash);
+		Item(std::vector<Item*>& Array);
+		~Item(void);
+		bool IsNull(void)const;
+		long long& Int(void);
+		double& Double(void);
+		bool& Bool(void);
+		std::wstring& String(void);
+		std::map<std::wstring,Item*>& Hash(void);
+		std::vector<Item*>& Array(void);
 
 	};
 
@@ -44,7 +63,9 @@ namespace Json
 		std::wstring ToString(std::nullptr_t Null);
 
 	public:
-		
+		std::wstring Create(Item* Root);
+		Item* Parse(std::wstring JsonString);
 
 	};
+	
 }

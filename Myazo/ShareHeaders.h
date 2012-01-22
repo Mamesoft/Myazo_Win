@@ -23,8 +23,6 @@
 #include <WinInet.h> 
 #include <CommCtrl.h>
 
-#include <boost/property_tree/json_parser.hpp>
-
 #pragma comment(lib,"Shlwapi.lib")
 #pragma comment(lib,"Gdiplus.lib")
 #pragma comment(lib,"WinInet.lib")
