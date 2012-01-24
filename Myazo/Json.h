@@ -3,7 +3,7 @@
 
 namespace Json
 {
-	enum ItemType
+	enum Type
 	{
 		Int,
 		Double,
@@ -23,20 +23,28 @@ namespace Json
 		std::wstring* String_Value;
 		std::map<std::wstring,Item*>* Hash_Value;
 		std::vector<Item*>* Array_Value;
-		ItemType Type;
+		Type Type_Value;
 		bool IsNull_Value;
 
 		Item(const Item&);
+		void Clear(void);
 		
 	public:
 		Item(void);
-		Item(long long& Int);
-		Item(double& Double);
-		Item(bool& Bool);
-		Item(std::wstring& String);
-		Item(std::map<std::wstring,Item*>& Hash);
-		Item(std::vector<Item*>& Array);
+		Item(const long long& Int);
+		Item(const double& Double);
+		Item(const bool& Bool);
+		Item(const std::wstring& String);
+		Item(const std::map<std::wstring,Item*>& Hash);
+		Item(const std::vector<Item*>& Array);
+		Item(long long&& Int);
+		Item(double&& Double);
+		Item(bool&& Bool);
+		Item(std::wstring&& String);
+		Item(std::map<std::wstring,Item*>&& Hash);
+		Item(std::vector<Item*>&& Array);
 		~Item(void);
+		Type Type(void);
 		bool IsNull(void)const;
 		long long& Int(void);
 		double& Double(void);
@@ -54,13 +62,13 @@ namespace Json
 		double ParseDouble(std::wstring DoubleString);
 		bool ParseBool(std::wstring BoolString);
 		std::wstring ParseString(std::wstring String);
-		std::nullptr_t ParseNull(std::wstring NullString);
+		bool ParseNull(std::wstring NullString);
 
 		std::wstring ToString(long long Int);
 		std::wstring ToString(double Double);
 		std::wstring ToString(bool Bool);
 		std::wstring ToString(std::wstring String);
-		std::wstring ToString(std::nullptr_t Null);
+		std::wstring ToString(void);
 
 	public:
 		std::wstring Create(Item* Root);

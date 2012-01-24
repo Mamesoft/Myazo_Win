@@ -78,6 +78,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Json.cpp" />
+    <ClCompile Include="JsonItem.cpp" />
     <ClCompile Include="MyazoInit.cpp" />
     <ClCompile Include="PNGFile.cpp" />
     <ClCompile Include="Window.cpp" />

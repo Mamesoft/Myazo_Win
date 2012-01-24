@@ -1,76 +1,73 @@
 #include "Json.h"
 
-Json::Item::Item(const Item&)
+long long Json::Json::ParseInt(std::wstring IntString)
 {
-	return;
+	long long Int;
+	return Int;
 }
 
-Json::Item::Item(void)
+double Json::Json::ParseDouble(std::wstring DoubleString)
 {
-	return;
+	double Double;
+	return Double;
 }
 
-Json::Item::Item(long long& Int)
+bool Json::Json::ParseBool(std::wstring BoolString)
 {
-	return;
+	bool Bool;
+	return Bool;
 }
 
-Json::Item::Item(double& Double)
+std::wstring Json::Json::ParseString(std::wstring String)
 {
-	return;
+	std::wstring String;
+	return String;
 }
 
-Json::Item::Item(bool& Bool)
+bool Json::Json::ParseNull(std::wstring NullString)
 {
-	return;
+	bool IsNull;
+	return IsNull;
 }
 
-Json::Item::Item(std::wstring& String)
+std::wstring Json::Json::ToString(long long Int)
 {
-	return;
+	std::wstring ResultString;
+	return ResultString;
 }
 
-Json::Item::Item(std::map<std::wstring,Item*>& Hash)
+std::wstring Json::Json::ToString(double Double)
 {
-	return;
+	std::wstring ResultString;
+	return ResultString;
 }
 
-Json::Item::Item(std::vector<Item*>& Array)
+std::wstring Json::Json::ToString(bool Bool)
 {
-	return;
+	std::wstring ResultString;
+	return ResultString;
 }
 
-Json::Item::~Item(void)
+std::wstring Json::Json::ToString(std::wstring String)
 {
-	return;
+	std::wstring ResultString;
+	return ResultString;
 }
 
-bool Json::Item::IsNull(void)const
+std::wstring Json::Json::ToString(void)
 {
-	return IsNull_Value;
+	std::wstring ResultString;
+	return ResultString;
 }
 
-long long& Json::Item::Int(void)
+std::wstring Json::Json::Create(Item* Root)
 {
-	return *Int_Value;
+	std::wstring ResultString;
+	return ResultString;
 }
 
-double& Json::Item::Double(void)
+Json::Item* Json::Json::Parse(std::wstring JsonString)
 {
-	return *Double_Value;
-}
-
-bool& Json::Item::Bool(void)
-{
-	return *Bool_Value;
-}
-
-std::map<std::wstring,Json::Item*>& Json::Item::Hash(void)
-{
-	return *Hash_Value;
-}
-
-std::vector<Json::Item*>& Json::Item::Array(void)
-{
-	return *Array_Value;
+	Item* Root;
+	return Root;
 }
