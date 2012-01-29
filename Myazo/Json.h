@@ -3,6 +3,7 @@
 
 namespace Json
 {
+
 	enum Type
 	{
 		Int,
@@ -14,6 +15,10 @@ namespace Json
 		Null
 	};
 
+	class Item;
+	typedef std::map<std::wstring,Item*> Hash;
+	typedef std::vector<Item*> Array;
+
 	class Item
 	{
 	private:
@@ -21,8 +26,8 @@ namespace Json
 		double* Double_Value;
 		bool* Bool_Value;
 		std::wstring* String_Value;
-		std::map<std::wstring,Item*>* Hash_Value;
-		std::vector<Item*>* Array_Value;
+		Hash* Hash_Value;
+		Array* Array_Value;
 		Type Type_Value;
 		bool IsNull_Value;
 
@@ -35,14 +40,14 @@ namespace Json
 		Item(const double& Double);
 		Item(const bool& Bool);
 		Item(const std::wstring& String);
-		Item(const std::map<std::wstring,Item*>& Hash);
-		Item(const std::vector<Item*>& Array);
+		Item(const Hash& Hash);
+		Item(const Array& Array);
 		Item(long long&& Int);
 		Item(double&& Double);
 		Item(bool&& Bool);
 		Item(std::wstring&& String);
-		Item(std::map<std::wstring,Item*>&& Hash);
-		Item(std::vector<Item*>&& Array);
+		Item(Hash&& Hash);
+		Item(Array&& Array);
 		~Item(void);
 		Type Type(void);
 		bool IsNull(void)const;
@@ -50,29 +55,29 @@ namespace Json
 		double& Double(void);
 		bool& Bool(void);
 		std::wstring& String(void);
-		std::map<std::wstring,Item*>& Hash(void);
-		std::vector<Item*>& Array(void);
+		Hash& Hash(void);
+		Array& Array(void);
 
 	};
 
 	class Json
 	{
 	private:
-		long long ParseInt(std::wstring IntString);
-		double ParseDouble(std::wstring DoubleString);
-		bool ParseBool(std::wstring BoolString);
-		std::wstring ParseString(std::wstring String);
-		bool ParseNull(std::wstring NullString);
+		long long ParseInt(std::wstring::const_iterator& Char);
+		double ParseDouble(std::wstring::const_iterator& Char);
+		bool ParseBool(std::wstring::const_iterator& Char);
+		std::wstring ParseString(std::wstring::const_iterator& Char);
+		bool ParseNull(std::wstring::const_iterator& Char);
 
-		std::wstring ToString(long long Int);
-		std::wstring ToString(double Double);
-		std::wstring ToString(bool Bool);
-		std::wstring ToString(std::wstring String);
+		std::wstring ToString(const long long Int);
+		std::wstring ToString(const double Double);
+		std::wstring ToString(const bool Bool);
+		std::wstring ToString(const std::wstring String);
 		std::wstring ToString(void);
 
 	public:
-		std::wstring Create(Item* Root);
-		Item* Parse(std::wstring JsonString);
+		std::wstring Create(const Item* const& Root);
+		Item* Parse(const std::wstring& JsonString);
 
 	};
 	

@@ -11,6 +11,8 @@
 #include <vector>
 #include <map>
 #include <algorithm>
+#include <stack>
+#include <regex>
 
 #include <cstring>
 #include <ctime>
