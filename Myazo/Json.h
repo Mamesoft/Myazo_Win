@@ -49,7 +49,7 @@ namespace Json
 		Item(Hash&& Hash);
 		Item(Array&& Array);
 		~Item(void);
-		Type Type(void);
+		Type Type(void)const;
 		bool IsNull(void)const;
 		long long& Int(void);
 		double& Double(void);
@@ -72,11 +72,11 @@ namespace Json
 		std::wstring ToString(const long long Int);
 		std::wstring ToString(const double Double);
 		std::wstring ToString(const bool Bool);
-		std::wstring ToString(const std::wstring String);
+		std::wstring ToEscapedString(const std::wstring String);
 		std::wstring ToString(void);
 
 	public:
-		std::wstring Create(const Item* const& Root);
+		std::wstring Create(Item* const& Root);
 		Item* Parse(const std::wstring& JsonString);
 
 	};

@@ -32,8 +32,9 @@ bool Json::Json::ParseNull(std::wstring::const_iterator& Char)
 
 std::wstring Json::Json::ToString(long long Int)
 {
-	std::wstring ResultString;
-	return ResultString;
+	std::wostringstream Result;
+	Result<<Int;
+	return Result.str();
 }
 
 std::wstring Json::Json::ToString(double Double)
@@ -60,11 +61,104 @@ std::wstring Json::Json::ToString(void)
 	return ResultString;
 }
 
-std::wstring Json::Json::Create(const Item* const& Root)
+std::wstring Json::Json::Create(Item* const& Root)
 {
-	std::stack<const Item* const> Level;
-	std::wstring ResultString;
-	return ResultString;
+	union Iterator
+	{
+		Hash::const_iterator& Hash;
+		Array::const_iterator& Array;
+	};
+	std::stack<Item* const> Level;
+	std::stack<Iterator> IteratorLevel;
+	std::wstring JsonString;
+	std::wostringstream Converter;
+	Converter.setf(std::ios::scientific);
+	JsonString.reserve(1000);
+	IteratorLevel.push(Iterator());
+	*Root->Hash().cbegin();
+	if(Root!=nullptr){
+		if(Root->Type()==Type::Hash){
+			JsonString+=L'{';
+			IteratorLevel.top().Hash=Root->Hash().cbegin();
+		}else if(Root->Type()==Type::Array){
+			JsonString+=L'[';
+			IteratorLevel.top().Array=Root->Array().cbegin();
+		}else throw std::exception("配列又は連想配列を表す型は、Json::Array\n又はJson::Hashでなければなりません。");
+		Level.push(Root);
+		while(Level.size()>0){
+			Type ObjType=Level.top()->Type();
+			if(ObjType==Type::Hash){
+				if(IteratorLevel.top().Hash!=Level.top()->Hash().cend()){
+					JsonString+=L'\"';
+					JsonString+=(*IteratorLevel.top().Hash).first;
+					JsonString+=L"\":";
+					Item* const& Member=(*IteratorLevel.top().Hash).second;
+					Type MemberType=Member?Member->Type():Type::Null;
+					if(MemberType==Type::Null) JsonString+=L"null";
+					else if(MemberType==Type::Int) Converter<<Member->Int(),JsonString+=Converter.str(),Converter.str(std::wstring());
+					else if(MemberType==Type::Double) Converter<<Member->Double(),JsonString+=Converter.str(),Converter.str(std::wstring());
+					else if(MemberType==Type::Bool) JsonString+=Member->Bool()?L"true":L"false";
+					else if(MemberType==Type::String) JsonString+=ToEscapedString(Member->String());
+					else if(MemberType==Type::Hash){
+						JsonString+=L'{';
+						Level.push(Member);
+						IteratorLevel.top().Hash++;
+						IteratorLevel.push(Iterator());
+						IteratorLevel.top().Hash=Member->Hash().cbegin();
+						continue;
+					}else if(MemberType==Type::Array){
+						JsonString+=L'[';
+						Level.push(Member);
+						IteratorLevel.top().Hash++;
+						IteratorLevel.push(Iterator());
+						IteratorLevel.top().Array=Member->Array().cbegin();
+						continue;
+					}else throw std::exception("オブジェクトの型が数値(long long,double)、\n論理値(bool)、文字列(std::wstring)、配列(Json::Array)、\n連想配列(Json::Hash)以外の型です。");
+					JsonString+=L',';
+					IteratorLevel.top().Hash++;
+				}else{
+					JsonString[JsonString.length()-1]=L'}';
+					Level.pop();
+					IteratorLevel.pop();
+					if(Level.size()>0) JsonString+=L",";
+				}
+			}else if(ObjType==Type::Array){
+				if(IteratorLevel.top().Array!=Level.top()->Array().cend()){
+					Item* Member=*IteratorLevel.top().Array;
+					Type MemberType=Member?Member->Type():Type::Null;
+					if(MemberType==Type::Null) JsonString+=L"null";
+					else if(MemberType==Type::Int) Converter<<Member->Int(),JsonString+=Converter.str(),Converter.str(std::wstring());
+					else if(MemberType==Type::Double) Converter<<Member->Double(),JsonString+=Converter.str(),Converter.str(std::wstring());
+					else if(MemberType==Type::Bool) JsonString+=Member->Bool()?L"true":L"false";
+					else if(MemberType==Type::String) JsonString+=ToEscapedString(Member->String());
+					else if(MemberType==Type::Hash){
+						JsonString+=L'{';
+						Level.push(Member);
+						IteratorLevel.top().Array++;
+						IteratorLevel.push(Iterator());
+						IteratorLevel.top().Hash=Member->Hash().cbegin();
+						continue;
+					}else if(MemberType==Type::Array){
+						JsonString+=L'[';
+						Level.push(Member);
+						IteratorLevel.top().Array++;
+						IteratorLevel.push(Iterator());
+						IteratorLevel.top().Array=Member->Array().cbegin();
+						continue;
+					}else throw std::exception("オブジェクトの型が数値(long long,double)、\n"
+						"論理値(bool)、文字列(std::wstring)、配列(Json::Array)、\n連想配列(Json::Hash)以外の型です。");
+					JsonString+=L',';
+					IteratorLevel.top().Array++;
+				}else{
+					JsonString[JsonString.length()-1]=L']';
+					Level.pop();
+					IteratorLevel.pop();
+					if(Level.size()>0) JsonString+=L',';
+				}
+			}else throw std::exception("配列又は連想配列を表す型は、Json::Array\n又はJson::Hashでなければなりません。");
+		}
+	}
+	return JsonString;
 }
 
 Json::Item* Json::Json::Parse(const std::wstring& JsonString)
@@ -135,6 +229,6 @@ Json::Item* Json::Json::Parse(const std::wstring& JsonString)
 				Level.top()->Array().push_back(ParseNull(Char)?new Item():(throw std::exception(),nullptr));
 			}else if(*Char==L']') Level.pop();
 		}
-	}while(Level.size()!=0);
+	}while(Level.size()!=0&&Char!=JsonString.cend());
 	return Root;
 }
