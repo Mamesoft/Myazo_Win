@@ -16,36 +16,37 @@ namespace Json
 	};
 
 	class Item;
-	typedef std::map<std::wstring,Item*> Hash;
-	typedef std::vector<Item*> Array;
+	typedef std::map<std::wstring,Item> Hash;
+	typedef std::vector<Item> Array;
+	typedef std::wstring String;
 
 	class Item
 	{
 	private:
-		long long* Int_Value;
-		double* Double_Value;
-		bool* Bool_Value;
-		std::wstring* String_Value;
-		Hash* Hash_Value;
-		Array* Array_Value;
+		std::shared_ptr<long long> Int_Value;
+		std::shared_ptr<double> Double_Value;
+		std::shared_ptr<bool> Bool_Value;
+		std::shared_ptr<std::wstring> String_Value;
+		std::shared_ptr<Hash> Hash_Value;
+		std::shared_ptr<Array> Array_Value;
 		Type Type_Value;
 		bool IsNull_Value;
-
-		Item(const Item&);
-		void Clear(void);
 		
 	public:
 		Item(void);
+		Item(const Item& LeftRef);
+		Item(Item&& RightRef);
+		Item(Type ItemType);
 		Item(const long long& Int);
 		Item(const double& Double);
 		Item(const bool& Bool);
-		Item(const std::wstring& String);
+		Item(const String& String);
 		Item(const Hash& Hash);
 		Item(const Array& Array);
 		Item(long long&& Int);
 		Item(double&& Double);
 		Item(bool&& Bool);
-		Item(std::wstring&& String);
+		Item(String&& String);
 		Item(Hash&& Hash);
 		Item(Array&& Array);
 		~Item(void);
@@ -57,10 +58,13 @@ namespace Json
 		std::wstring& String(void);
 		Hash& Hash(void);
 		Array& Array(void);
+		Item& operator=(const Item& LeftRef);
+		Item& operator=(Item&& RightRef);
 
 	};
 
-	class Json
+
+	class Parser
 	{
 	private:
 		long long ParseInt(std::wstring::const_iterator& Char);
@@ -76,8 +80,8 @@ namespace Json
 		std::wstring ToString(void);
 
 	public:
-		std::wstring Create(Item* const& Root);
-		Item* Parse(const std::wstring& JsonString);
+		std::wstring Create(const Item& Root);
+		Item Parse(const std::wstring& JsonString);
 
 	};
 	

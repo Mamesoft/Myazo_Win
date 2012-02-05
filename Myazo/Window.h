@@ -5,14 +5,11 @@ class ControlWindow;
 
 class Window
 {
-private:
-	Window(const Window&);
-
 protected:
 	HWND WindowHandle;
-	Window* ParentWindow;
+	Window& ParentWindow;
 	std::wstring WindowClassName;
-	std::vector<ControlWindow*> ChildControls;
+	std::vector<Window> ChildControls;
 	bool IsCreated_Value;
 	int ID;
 
@@ -20,6 +17,8 @@ protected:
 
 public:
 	~Window(void);
+	Window(const Window& LeftRef);
+	Window(Window&& RightRef);
 	bool Create(std::wstring Caption,unsigned long WindowStyle,int X,int Y,int Width,int Height);
 	bool Create(std::wstring Caption,unsigned long WindowStyle,unsigned long WindowStyleEx,int X,int Y,int Width,int Height);
 	bool IsCreated(void)const;
@@ -30,29 +29,28 @@ public:
 	long SendMessage(unsigned int Message,WPARAM WParam,LPARAM LParam);
 	HWND GetWindowHandle(void)const;
 	int GetWindowID(void)const;
-	Window* GetParentWindow(void)const;
+	Window& GetParentWindow(void)const;
 	const std::wstring GetWindowClassName(void)const;
 	unsigned long GetWindowStyle(void)const;
 	void SetWindowStyle(unsigned long Style);
 	unsigned long GetWindowStyleEx(void)const;
 	void SetWindowStyleEx(unsigned long StyleEx);
-	ControlWindow* AddControl(std::wstring ClassName,std::wstring Caption,unsigned long WindowStyle,int X,int Y,int Width,int Height,int ID);
-	ControlWindow* AddControl(std::wstring ClassName,std::wstring Caption,unsigned long WindowStyle,unsigned long WindowStyleEx,int X,int Y,int Width,int Height,int ID);
-	ControlWindow* AddControl(ControlWindow* const Control);
-	bool RemoveControl(ControlWindow* const Control);
+	Window& AddControl(std::wstring ClassName,std::wstring Caption,unsigned long WindowStyle,int X,int Y,int Width,int Height,int ID);
+	Window& AddControl(std::wstring ClassName,std::wstring Caption,unsigned long WindowStyle,unsigned long WindowStyleEx,int X,int Y,int Width,int Height,int ID);
+	Window& AddControl(const ControlWindow& Control);
+	bool RemoveControl(const ControlWindow& Control);
 	bool RemoveControlByHandle(HWND WindowHandle);
 	bool RemoveControlByID(int ID);
-	ControlWindow* GetControl(int Index);
-	ControlWindow* GetControlByHandle(HWND WindowHandle);
-	ControlWindow* GetControlByID(int ControlID);
+	Window& GetControl(int Index);
+	Window& GetControlByHandle(HWND WindowHandle);
+	Window& GetControlByID(int ControlID);
+	Window& operator=(const Window& LeftRef);
+	Window& operator=(Window&& RightRef);
 	
 };
 
 class DialogWindow : public Window
 {
-private:
-	DialogWindow(const DialogWindow&);
-
 protected:
 	WNDCLASSEX WindowClass;
 	unsigned short ClassAtom;
@@ -61,6 +59,8 @@ protected:
 	void InitWindowClass(void);
 
 public:
+	DialogWindow(const DialogWindow& LeftRef);
+	DialogWindow(DialogWindow&& RightRef);
 	DialogWindow(std::wstring ClassName,WNDPROC Proc);
 	DialogWindow(std::wstring ClassName,WNDPROC Proc,HICON Icon,HICON SmallIcon);
 	DialogWindow(std::wstring ClassName,WNDPROC Proc,HICON Icon,HICON SmallIcon,Window* const ParentWindow);
@@ -73,19 +73,21 @@ public:
 	WNDPROC GetWindowProc(void)const;
 	HICON GetWindowIcon(void)const;
 	HICON GetWindowSmallIcon(void)const;
+	DialogWindow& operator=(const DialogWindow& LeftRef);
+	DialogWindow& operator=(DialogWindow&& RightRef);
 
 };
 
+/*
 class ControlWindow : public Window
 {
-private:
-	ControlWindow(const ControlWindow&);
-
 protected:
 
 
 public:
+	ControlWindow(const ControlWindow&);
 	ControlWindow(std::wstring ClassName,int ID,Window* ParentWindow);
 	~ControlWindow(void);
 
 };
+*/
