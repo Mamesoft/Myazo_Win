@@ -1,10 +1,5 @@
 #include "Window.h"
 
-Window::Window(const Window&)
-{
-	return;
-}
-
 Window::Window(void)
 {
 	WindowHandle=nullptr;
@@ -12,6 +7,28 @@ Window::Window(void)
 	WindowClassName=L"";
 	IsCreated_Value=false;
 	ID=0;
+	return;
+}
+
+Window::Window(const Window& LeftRef)
+{
+	WindowHandle=LeftRef.WindowHandle;
+	LeftRef.WindowHandle=nullptr;
+	WindowClassName=std::move(LeftRef.WindowClassName);
+	ChildControls=std::move(LeftRef.ChildControls);
+	IsCreated_Value=LeftRef.IsCreated_Value;
+	ID=LeftRef.ID;
+	return;
+}
+
+Window::Window(Window&& RightRef)
+{
+	WindowHandle=RightRef.WindowHandle;
+	RightRef.WindowHandle=nullptr;
+	WindowClassName=std::move(RightRef.WindowClassName);
+	ChildControls=std::move(RightRef.ChildControls);
+	IsCreated_Value=RightRef.IsCreated_Value;
+	ID=RightRef.ID;
 	return;
 }
 
@@ -173,7 +190,34 @@ ControlWindow* Window::GetControlByID(int ID)
 	return *Iterator;
 }
 
-DialogWindow::DialogWindow(const DialogWindow&)
+Window& Window::operator=(const Window& LeftRef)
+{
+	WindowHandle=LeftRef.WindowHandle;
+	LeftRef.WindowHandle=nullptr;
+	WindowClassName=std::move(LeftRef.WindowClassName);
+	ChildControls=std::move(LeftRef.ChildControls);
+	IsCreated_Value=LeftRef.IsCreated_Value;
+	ID=LeftRef.ID;
+	return *this;
+}
+
+Window& Window::operator=(Window&& RightRef)
+{
+	WindowHandle=RightRef.WindowHandle;
+	RightRef.WindowHandle=nullptr;
+	WindowClassName=std::move(RightRef.WindowClassName);
+	ChildControls=std::move(RightRef.ChildControls);
+	IsCreated_Value=RightRef.IsCreated_Value;
+	ID=RightRef.ID;
+	return *this;
+}
+
+DialogWindow::DialogWindow(const DialogWindow& LeftRef)
+{
+	return;
+}
+
+DialogWindow::DialogWindow(DialogWindow&& RightRef)
 {
 	return;
 }
@@ -251,15 +295,12 @@ bool DialogWindow::Register(void)
 	return true;
 }
 
-ControlWindow::ControlWindow(const ControlWindow&)
+DialogWindow& DialogWindow::operator=(const DialogWindow& LeftRef)
 {
-	return;
+	return *this;
 }
 
-ControlWindow::ControlWindow(std::wstring ClassName,int ID,Window* ParentWindow)
+DialogWindow& DialogWindow::operator=(DialogWindow&& RightRef)
 {
-	WindowClassName=ClassName;
-	this->ID=ID;
-	this->ParentWindow=ParentWindow;
-	return;
+	return *this;
 }

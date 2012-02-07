@@ -7,7 +7,7 @@ class Window
 {
 protected:
 	HWND WindowHandle;
-	Window& ParentWindow;
+	Window* ParentWindow;
 	std::wstring WindowClassName;
 	std::vector<Window> ChildControls;
 	bool IsCreated_Value;
@@ -16,9 +16,10 @@ protected:
 	Window(void);
 
 public:
-	~Window(void);
 	Window(const Window& LeftRef);
 	Window(Window&& RightRef);
+	Window(std::wstring ClassName,int ID,Window& ParentWindow);
+	~Window(void);
 	bool Create(std::wstring Caption,unsigned long WindowStyle,int X,int Y,int Width,int Height);
 	bool Create(std::wstring Caption,unsigned long WindowStyle,unsigned long WindowStyleEx,int X,int Y,int Width,int Height);
 	bool IsCreated(void)const;
@@ -63,9 +64,9 @@ public:
 	DialogWindow(DialogWindow&& RightRef);
 	DialogWindow(std::wstring ClassName,WNDPROC Proc);
 	DialogWindow(std::wstring ClassName,WNDPROC Proc,HICON Icon,HICON SmallIcon);
-	DialogWindow(std::wstring ClassName,WNDPROC Proc,HICON Icon,HICON SmallIcon,Window* const ParentWindow);
+	DialogWindow(std::wstring ClassName,WNDPROC Proc,HICON Icon,HICON SmallIcon,const Window& ParentWindow);
 	DialogWindow(const WNDCLASSEX& WindowClass);
-	DialogWindow(const WNDCLASSEX& WindowClass,Window* ParentWindow);
+	DialogWindow(const WNDCLASSEX& WindowClass,const Window& ParentWindow);
 	~DialogWindow(void);
 	bool Register(void);
 	bool IsRegistered(void)const;
@@ -77,17 +78,3 @@ public:
 	DialogWindow& operator=(DialogWindow&& RightRef);
 
 };
-
-/*
-class ControlWindow : public Window
-{
-protected:
-
-
-public:
-	ControlWindow(const ControlWindow&);
-	ControlWindow(std::wstring ClassName,int ID,Window* ParentWindow);
-	~ControlWindow(void);
-
-};
-*/

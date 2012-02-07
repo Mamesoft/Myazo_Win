@@ -61,14 +61,14 @@ std::wstring Json::Json::ToString(void)
 	return ResultString;
 }
 
-std::wstring Json::Json::Create(Item* const& Root)
+std::wstring Json::Json::Create(const Item& Root)
 {
 	union Iterator
 	{
 		Hash::const_iterator& Hash;
 		Array::const_iterator& Array;
 	};
-	std::stack<Item* const> Level;
+	std::stack<Item&> Level;
 	std::stack<Iterator> IteratorLevel;
 	std::wstring JsonString;
 	std::wostringstream Converter;
@@ -92,7 +92,7 @@ std::wstring Json::Json::Create(Item* const& Root)
 					JsonString+=L'\"';
 					JsonString+=(*IteratorLevel.top().Hash).first;
 					JsonString+=L"\":";
-					Item* const& Member=(*IteratorLevel.top().Hash).second;
+					Item& Member=(*IteratorLevel.top().Hash).second;
 					Type MemberType=Member?Member->Type():Type::Null;
 					if(MemberType==Type::Null) JsonString+=L"null";
 					else if(MemberType==Type::Int) Converter<<Member->Int(),JsonString+=Converter.str(),Converter.str(std::wstring());
@@ -124,7 +124,7 @@ std::wstring Json::Json::Create(Item* const& Root)
 				}
 			}else if(ObjType==Type::Array){
 				if(IteratorLevel.top().Array!=Level.top()->Array().cend()){
-					Item* Member=*IteratorLevel.top().Array;
+					Item& Member=*IteratorLevel.top().Array;
 					Type MemberType=Member?Member->Type():Type::Null;
 					if(MemberType==Type::Null) JsonString+=L"null";
 					else if(MemberType==Type::Int) Converter<<Member->Int(),JsonString+=Converter.str(),Converter.str(std::wstring());
