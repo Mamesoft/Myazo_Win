@@ -14,17 +14,23 @@ namespace Json
 		Type_Value=LeftRef.Type();
 		switch(Type_Value){
 		case Type::Int:
-			Int_Value=LeftRef.Int_Value;break;
+			Int_Value=LeftRef.Int_Value;
+			break;
 		case Type::Double:
-			Double_Value=LeftRef.Double_Value;break;
+			Double_Value=LeftRef.Double_Value;
+			break;
 		case Type::Bool:
-			Bool_Value=LeftRef.Bool_Value;break;
+			Bool_Value=LeftRef.Bool_Value;
+			break;
 		case Type::String:
-			String_Value=LeftRef.String_Value;break;
+			String_Value=LeftRef.String_Value;
+			break;
 		case Type::Hash:
-			Hash_Value=LeftRef.Hash_Value;break;
+			Hash_Value=LeftRef.Hash_Value;
+			break;
 		case Type::Array:
-			Array_Value=LeftRef.Array_Value;break;
+			Array_Value=LeftRef.Array_Value;
+			break;
 		}
 		IsNull_Value=Type_Value==Type::Null?true:false;
 		return;
@@ -35,17 +41,23 @@ namespace Json
 		Type_Value=RightRef.Type();
 		switch(Type_Value){
 		case Type::Int:
-			Int_Value=std::move(RightRef.Int_Value);break;
+			Int_Value=std::move(RightRef.Int_Value);
+			break;
 		case Type::Double:
-			Double_Value=std::move(RightRef.Double_Value);break;
+			Double_Value=std::move(RightRef.Double_Value);
+			break;
 		case Type::Bool:
-			Bool_Value=std::move(RightRef.Bool_Value);break;
+			Bool_Value=std::move(RightRef.Bool_Value);
+			break;
 		case Type::String:
-			String_Value=std::move(RightRef.String_Value);break;
+			String_Value=std::move(RightRef.String_Value);
+			break;
 		case Type::Hash:
-			Hash_Value=std::move(RightRef.Hash_Value);break;
+			Hash_Value=std::move(RightRef.Hash_Value);
+			break;
 		case Type::Array:
-			Array_Value=std::move(RightRef.Array_Value);break;
+			Array_Value=std::move(RightRef.Array_Value);
+			break;
 		}
 		IsNull_Value=Type_Value==Type::Null?true:false;
 		return;
@@ -56,17 +68,23 @@ namespace Json
 		Type_Value=ItemType;
 		switch(ItemType){
 		case Type::Int:
-			Int_Value.reset(new long long);break;
+			Int_Value.reset(new long long);
+			break;
 		case Type::Double:
-			Double_Value.reset(new double);break;
+			Double_Value.reset(new double);
+			break;
 		case Type::Bool:
-			Bool_Value.reset(new bool);break;
+			Bool_Value.reset(new bool);
+			break;
 		case Type::String:
-			String_Value.reset(new Json::String);break;
+			String_Value.reset(new Json::String);
+			break;
 		case Type::Hash:
-			Hash_Value.reset(new Json::Hash);break;
+			Hash_Value.reset(new Json::Hash);
+			break;
 		case Type::Array:
-			Array_Value.reset(new Json::Array);break;
+			Array_Value.reset(new Json::Array);
+			break;
 		}
 		IsNull_Value=ItemType==Type::Null?true:false;
 		return;
@@ -195,17 +213,23 @@ namespace Json
 		Json::Type ItemType=LeftRef.Type();
 		switch(ItemType){
 		case Type::Int:
-			Int_Value=LeftRef.Int_Value;break;
+			Int_Value=LeftRef.Int_Value;
+			break;
 		case Type::Double:
-			Double_Value=LeftRef.Double_Value;break;
+			Double_Value=LeftRef.Double_Value;
+			break;
 		case Type::Bool:
-			Bool_Value=LeftRef.Bool_Value;break;
+			Bool_Value=LeftRef.Bool_Value;
+			break;
 		case Type::String:
-			String_Value=LeftRef.String_Value;break;
+			String_Value=LeftRef.String_Value;
+			break;
 		case Type::Hash:
-			Hash_Value=LeftRef.Hash_Value;break;
+			Hash_Value=LeftRef.Hash_Value;
+			break;
 		case Type::Array:
-			Array_Value=LeftRef.Array_Value;break;
+			Array_Value=LeftRef.Array_Value;
+			break;
 		}
 		IsNull_Value=ItemType==Type::Null?true:false;
 		return *this;
@@ -216,17 +240,23 @@ namespace Json
 		Type_Value=RightRef.Type();
 		switch(Type_Value){
 		case Type::Int:
-			Int_Value=std::move(RightRef.Int_Value);break;
+			Int_Value=std::move(RightRef.Int_Value);
+			break;
 		case Type::Double:
-			Double_Value=std::move(RightRef.Double_Value);break;
+			Double_Value=std::move(RightRef.Double_Value);
+			break;
 		case Type::Bool:
-			Bool_Value=std::move(RightRef.Bool_Value);break;
+			Bool_Value=std::move(RightRef.Bool_Value);
+			break;
 		case Type::String:
-			String_Value=std::move(RightRef.String_Value);break;
+			String_Value=std::move(RightRef.String_Value);
+			break;
 		case Type::Hash:
-			Hash_Value=std::move(RightRef.Hash_Value);break;
+			Hash_Value=std::move(RightRef.Hash_Value);
+			break;
 		case Type::Array:
-			Array_Value=std::move(RightRef.Array_Value);break;
+			Array_Value=std::move(RightRef.Array_Value);
+			break;
 		}
 		IsNull_Value=Type_Value==Type::Null?true:false;
 		return *this;

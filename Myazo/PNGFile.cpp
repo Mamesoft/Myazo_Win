@@ -30,9 +30,9 @@ CLSID PNGFile::GetPNGEncoderClassID(void)
 
 bool PNGFile::IsWellHeader(std::wstring FileName)
 {
-	unsigned long long PNGFileHeader=0x89504E470D0A1A0A,TargetFileHeader;
-	std::ifstream File(FileName.c_str(),std::ios::binary);
-	File>>TargetFileHeader;
+	unsigned long long PNGFileHeader=0x0A1A0A0D474E5089,TargetFileHeader;
+	std::wifstream File(FileName,std::ios_base::in|std::ios_base::binary);
+	File.read((wchar_t*)&TargetFileHeader,sizeof(TargetFileHeader));
 	File.close();
 	if(PNGFileHeader!=TargetFileHeader) return false;
 	return true;

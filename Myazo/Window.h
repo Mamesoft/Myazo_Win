@@ -1,24 +1,23 @@
 #include "ShareHeaders.h"
 #undef SendMessage
 
-class ControlWindow;
-
 class Window
 {
 protected:
 	HWND WindowHandle;
-	Window* ParentWindow;
+	Window* const ParentWindow;
 	std::wstring WindowClassName;
 	std::vector<Window> ChildControls;
 	bool IsCreated_Value;
 	int ID;
 
 	Window(void);
+	Window(Window* ParentWindow);
 
 public:
 	Window(const Window& LeftRef);
 	Window(Window&& RightRef);
-	Window(std::wstring ClassName,int ID,Window& ParentWindow);
+	Window(std::wstring ClassName,int ID,Window* ParentWindow);
 	~Window(void);
 	bool Create(std::wstring Caption,unsigned long WindowStyle,int X,int Y,int Width,int Height);
 	bool Create(std::wstring Caption,unsigned long WindowStyle,unsigned long WindowStyleEx,int X,int Y,int Width,int Height);
@@ -38,8 +37,9 @@ public:
 	void SetWindowStyleEx(unsigned long StyleEx);
 	Window& AddControl(std::wstring ClassName,std::wstring Caption,unsigned long WindowStyle,int X,int Y,int Width,int Height,int ID);
 	Window& AddControl(std::wstring ClassName,std::wstring Caption,unsigned long WindowStyle,unsigned long WindowStyleEx,int X,int Y,int Width,int Height,int ID);
-	Window& AddControl(const ControlWindow& Control);
-	bool RemoveControl(const ControlWindow& Control);
+	Window& AddControl(const Window& Control);
+	Window& AddControl(Window&& Control);
+	bool RemoveControl(const Window& Control);
 	bool RemoveControlByHandle(HWND WindowHandle);
 	bool RemoveControlByID(int ID);
 	Window& GetControl(int Index);
@@ -63,12 +63,14 @@ public:
 	DialogWindow(const DialogWindow& LeftRef);
 	DialogWindow(DialogWindow&& RightRef);
 	DialogWindow(std::wstring ClassName,WNDPROC Proc);
+	DialogWindow(std::wstring ClassName,WNDPROC Proc,Window* ParentWindow);
 	DialogWindow(std::wstring ClassName,WNDPROC Proc,HICON Icon,HICON SmallIcon);
-	DialogWindow(std::wstring ClassName,WNDPROC Proc,HICON Icon,HICON SmallIcon,const Window& ParentWindow);
+	DialogWindow(std::wstring ClassName,WNDPROC Proc,HICON Icon,HICON SmallIcon,Window* ParentWindow);
 	DialogWindow(const WNDCLASSEX& WindowClass);
-	DialogWindow(const WNDCLASSEX& WindowClass,const Window& ParentWindow);
+	DialogWindow(const WNDCLASSEX& WindowClass,Window* ParentWindow);
 	~DialogWindow(void);
 	bool Register(void);
+	bool Unregister(void);
 	bool IsRegistered(void)const;
 	unsigned short GetWindowClassAtom(void)const;
 	WNDPROC GetWindowProc(void)const;
