@@ -78,8 +78,6 @@ namespace Json
 			Array::const_iterator& Array;
 		};
 
-		long long ParseInt(std::wstring::const_iterator& Char);
-		double ParseDouble(std::wstring::const_iterator& Char);
 		bool ParseBool(std::wstring::const_iterator& Char);
 		std::wstring ParseString(std::wstring::const_iterator& Char);
 		bool ParseNull(std::wstring::const_iterator& Char);

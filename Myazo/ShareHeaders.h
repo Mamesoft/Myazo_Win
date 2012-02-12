@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <stack>
 #include <regex>
+#include <functional>
 
 #include <cstring>
 #include <ctime>

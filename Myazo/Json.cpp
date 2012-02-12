@@ -14,7 +14,32 @@ namespace Json
 
 	std::wstring Parser::ParseString(std::wstring::const_iterator& Char)
 	{
-		std::wstring String;
+		auto Start=++Char;
+		for(;;Char++) if(*Char==L'"'&&*(Char-1)!=L'\\') break;
+		std::wstring TempString(Start,Char),String;
+		String.reserve(TempString.length());
+		for(auto Position=TempString.cbegin();Position!=TempString.cend();Position++){
+			if(*Position==L'\\'){
+				auto Char=*++Position;
+				String.push_back(
+					Char==L'u'?
+						[&]()->wchar_t
+						{
+							Position+=4;
+							int Char;
+							std::wistringstream(std::wstring(Position-4,Position))>>Char;
+							return (wchar_t)Char;
+						}():
+					Char==L'\"'?L'\"':
+					Char==L'\\'?L'\\':
+					Char==L'/'?L'/':
+					Char==L'b'?L'\b':
+					Char==L'f'?L'\f':
+					Char==L'n'?L'\n':
+					Char==L'r'?L'\r':
+					Char==L't'?L'\t':throw std::exception());
+			}else String.push_back(*Position);
+		}
 		return String;
 	}
 
