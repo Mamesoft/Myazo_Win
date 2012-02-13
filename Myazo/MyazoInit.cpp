@@ -32,6 +32,23 @@ bool Myazo::InitWindow(void)
 
 void Myazo::EnterMessageLoop(void)
 {
+	MSG Msg;
+	ZeroMemory(&Msg,sizeof(Msg));
+	while(Msg.message!=WM_QUIT){
+		if(PeekMessage(&Msg,0,0,0,PM_REMOVE){
+			TranslateMessage(&Msg);
+			DispatchMessage(&Msg);
+		}
+	}
 	return;
 }
 
+LRESULT __stdcall WndProc(HWND WindowHandle,unsigned int Message,WPARAM WParam,LPARAM LParam)
+{
+	return 0;
+}
+
+LRESULT __stacall LayerWndProc(HWND WindowHandle,unsigned int Message,WPARAM WParam,LPARAM LParam)
+{
+	return 0;
+}
