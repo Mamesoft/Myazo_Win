@@ -1,40 +1,44 @@
 #include "Window.h"
 
-Window::Window(void):ParentWindow(nullptr)
+Window::Window(void)
 {
 	Init();
 	return;
 }
 
-Window::Window(Window* ParentWindow):ParentWindow(ParentWindow)
+Window::Window(Window* ParentWindow)
 {
 	Init();
+	this->ParentWindow=ParentWindow;
 	return;
 }
 
-Window::Window(const Window& LeftRef):ParentWindow(LeftRef.ParentWindow)
+Window::Window(const Window& LeftRef)
 {
 	WindowHandle=LeftRef.WindowHandle;
 	ID=LeftRef.ID;
 	ChildControls=LeftRef.ChildControls;
 	WindowClassName=LeftRef.WindowClassName;
+	ParentWindow=LeftRef.ParentWindow;
 	return;
 }
 
-Window::Window(Window&& RightRef):ParentWindow(RightRef.ParentWindow)
+Window::Window(Window&& RightRef)
 {
 	WindowHandle=std::move(RightRef.WindowHandle);
 	ID=std::move(RightRef.ID);
 	ChildControls=std::move(RightRef.ChildControls);
 	WindowClassName=std::move(RightRef.WindowClassName);
+	ParentWindow=RightRef.ParentWindow;
 	return;
 }
 
-Window::Window(std::wstring ClassName,int ID,Window* ParentWindow):ParentWindow(ParentWindow)
+Window::Window(std::wstring ClassName,int ID,Window* ParentWindow)
 {
 	Init();
-	WindowClassName=ClassName;
 	*this->ID=ID;
+	WindowClassName=ClassName;
+	this->ParentWindow=ParentWindow;
 	return;
 }
 
@@ -45,6 +49,7 @@ void Window::Init(void)
 	ChildControls=std::make_shared<std::vector<Window>>();
 	*WindowHandle=nullptr;
 	*ID=0;
+	ParentWindow=nullptr;
 	return;
 }
 
@@ -324,9 +329,7 @@ void DialogWindow::Init(void)
 
 bool DialogWindow::Register(void)
 {
-	*ClassAtom=RegisterClassEx(WindowClass.get());
-	if(!*ClassAtom) return false;
-	return true;
+	return !*ClassAtom&&(*ClassAtom=RegisterClassEx(WindowClass.get()))&&!*ClassAtom?true:false;
 }
 
 bool DialogWindow::Unregister(void)

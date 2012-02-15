@@ -65,9 +65,10 @@ namespace Json
 		const Json::Array& Array(void)const;
 		Item& operator=(const Item& LeftRef);
 		Item& operator=(Item&& RightRef);
+		bool operator==(const Item& LeftRef)const;
+		bool operator!=(const Item& LeftRef)const;
 
 	};
-
 
 	class Parser
 	{

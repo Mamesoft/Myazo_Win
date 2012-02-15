@@ -15,6 +15,7 @@ namespace Json
 	std::wstring Parser::ParseString(std::wstring::const_iterator& Char)
 	{
 		auto Start=++Char;
+		std::wistringstream Converter;
 		for(;;Char++) if(*Char==L'"'&&*(Char-1)!=L'\\') break;
 		std::wstring TempString(Start,Char),String;
 		String.reserve(TempString.length());
@@ -23,12 +24,12 @@ namespace Json
 				auto Char=*++Position;
 				String.push_back(
 					Char==L'u'?
-						[&]()->wchar_t
+						[&](void)->wchar_t
 						{
 							Position+=4;
+							Converter.str(std::wstring(Position-4,Position));
 							int Char;
-							std::wistringstream(std::wstring(Position-4,Position))>>Char;
-							return (wchar_t)Char;
+							return Converter>>Char,(wchar_t)Char;
 						}():
 					Char==L'\"'?L'\"':
 					Char==L'\\'?L'\\':
@@ -54,7 +55,29 @@ namespace Json
 
 	std::wstring Parser::ToEscapeString(const std::wstring& String)
 	{
-		return String;
+		std::wstring EscapeString;
+		std::wostringstream Converter;
+		Converter<<std::ios_base::hex;
+		EscapeString.reserve(String.length()*2);
+		for(auto Position=String.cbegin();Position!=String.cend();Position++){
+				auto Char=*Position;
+				EscapeString+=
+					Char==L'\"'?L"\\\"":
+					Char==L'\\'?L"\\\\":
+					Char==L'/'?L"\\/":
+					Char==L'\b'?L"\\b":
+					Char==L'\f'?L"\\f":
+					Char==L'\n'?L"\\n":
+					Char==L'\r'?L"\\r":
+					Char==L'\t'?L"\\t":
+					Char<=L'\x007f'?EscapeString.push_back(Char),L"":
+					[&](void)->const wchar_t*
+					{
+						Converter.str(std::wstring());
+						return Converter<<L"\\u"<<(int)Char,Converter.str().c_str();
+					}();
+		}
+		return EscapeString;
 	}
 
 	std::wstring Parser::Create(const Item& Root)

@@ -1,16 +1,6 @@
 #include "ShareHeaders.h"
 #undef SendMessage
 
-struct WindowDeleter
-{
-	typedef HWND pointer;
-	void operator()(HWND WindowHandle)
-	{
-		if(WindowHandle&&IsWindow(WindowHandle)) DestroyWindow(WindowHandle);
-		return;
-	}
-};
-
 class Window
 {
 protected:
@@ -20,11 +10,11 @@ protected:
 	std::wstring WindowClassName;
 	Window* ParentWindow;
 
-	Window(void);
 	Window(Window* ParentWindow);
 	void Init(void);
 
 public:
+	Window(void);
 	Window(const Window& LeftRef);
 	Window(Window&& RightRef);
 	Window(std::wstring ClassName,int ID,Window* ParentWindow);
