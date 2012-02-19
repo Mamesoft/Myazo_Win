@@ -62,6 +62,7 @@ protected:
 	void Init(void);
 
 public:
+	DialogWindow(void);
 	DialogWindow(const DialogWindow& LeftRef);
 	DialogWindow(DialogWindow&& RightRef);
 	DialogWindow(std::wstring ClassName,WNDPROC Proc);
@@ -80,5 +81,7 @@ public:
 	HICON GetWindowSmallIcon(void)const;
 	DialogWindow& operator=(const DialogWindow& LeftRef);
 	DialogWindow& operator=(DialogWindow&& RightRef);
+	bool operator==(const DialogWindow& LeftRef)const;
+	bool operator!=(const DialogWindow& LeftRef)const;
 
 };

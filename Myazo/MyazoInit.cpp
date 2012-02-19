@@ -11,6 +11,12 @@ Myazo::Myazo(void)
 	UploadAsPrivate=false;
 	UtilityMode=false;
 	OffsetX=OffsetY=0;
+	ScreenSizeX=0;
+	ScreenSizeY=0;
+	Window hoge=DialogWindow();
+	MainWindow=DialogWindow(L"MyazoMainWindow",WndProc,
+		(HICON)LoadImage(GetModuleHandle(nullptr),L"",IMAGE_ICON,32,32,0),
+		(HICON)LoadImage(GetModuleHandle(nullptr),L"",IMAGE_ICON,16,16,0));
 	return;
 }
 
@@ -19,11 +25,51 @@ Myazo::~Myazo(void)
 	return;
 }
 
-bool Myazo::Init(void)
+Myazo& Myazo::operator=(const Myazo&)
 {
-	return true;
+	return *this;
 }
 
+Myazo& Myazo::operator=(Myazo&&)
+{
+	return *this;
+}
+
+LRESULT __stdcall Myazo::WndProc(HWND WindowHandle,unsigned int Message,WPARAM WParam,LPARAM LParam)
+{
+	Myazo& Program=GetInstance();
+	switch(Message){
+	case WM_KEYDOWN:
+		Program.ProcessKeyMessage(WParam);
+		break;
+	default:
+		return DefWindowProc(WindowHandle,Message,WParam,LParam);
+	}
+	return 0;
+}
+
+LRESULT __stdcall Myazo::LayerWndProc(HWND WindowHandle,unsigned int Message,WPARAM WParam,LPARAM LParam)
+{
+	Myazo& Program=GetInstance();
+	switch(Message){
+	default:
+		return DefWindowProc(WindowHandle,Message,WParam,LParam);
+	}
+	return 0;
+}
+
+Myazo& Myazo::GetInstance(void)
+{
+	static Myazo& Instance=Myazo();
+	return Instance;
+}
+
+bool Myazo::Init(void)
+{
+	ScreenSizeX=GetSystemMetrics(SM_CXVIRTUALSCREEN);
+	ScreenSizeY=GetSystemMetrics(SM_CYVIRTUALSCREEN);
+	return true;
+}
 bool Myazo::InitWindow(void)
 {
 
@@ -43,20 +89,24 @@ void Myazo::EnterMessageLoop(void)
 	return;
 }
 
-LRESULT __stdcall WndProc(HWND WindowHandle,unsigned int Message,WPARAM WParam,LPARAM LParam)
+bool Myazo::Upload(void)
 {
-	switch(Message){
-	default:
-		return DefWindowProc(WindowHandle,Message,WParam,LParam);
-	}
-	return 0;
+	return true;
 }
 
-LRESULT __stdcall LayerWndProc(HWND WindowHandle,unsigned int Message,WPARAM WParam,LPARAM LParam)
+void Myazo::ProcessKeyMessage(unsigned int KeyChar)throw
 {
-	switch(Message){
-	default:
-		return DefWindowProc(WindowHandle,Message,WParam,LParam);
+	switch(KeyChar){
+	case 'P':
+		UploadAsPrivate=!UploadAsPrivate;
+		MessageBox(LayerWindow.GetWindowHandle(),
+			UploadAsPrivate?L"非公開モードでアップロードされます。":L"公開モードでアップロードされます。",L"Myazo",MB_OK);
+		break;
+	case 'A':
+		int WindowWidth=300,WindowHeight=150;
+		AuthWindow.Create(L"アカウントの認証",WS_CAPTION|WS_SYSMENU,0,
+			(ScreenSizeX-WindowWidth)/2,(ScreenSizeY-WindowHeight)/2,WindowWidth,WindowHeight);
+		break;
 	}
-	return 0;
+	return;
 }
