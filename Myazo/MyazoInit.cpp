@@ -13,10 +13,6 @@ Myazo::Myazo(void)
 	OffsetX=OffsetY=0;
 	ScreenSizeX=0;
 	ScreenSizeY=0;
-	Window hoge=DialogWindow();
-	MainWindow=DialogWindow(L"MyazoMainWindow",WndProc,
-		(HICON)LoadImage(GetModuleHandle(nullptr),L"",IMAGE_ICON,32,32,0),
-		(HICON)LoadImage(GetModuleHandle(nullptr),L"",IMAGE_ICON,16,16,0));
 	return;
 }
 
@@ -58,6 +54,16 @@ LRESULT __stdcall Myazo::LayerWndProc(HWND WindowHandle,unsigned int Message,WPA
 	return 0;
 }
 
+LRESULT __stdcall Myazo::AuthWndProc(HWND WindowHandle,unsigned int Message,WPARAM WParam,LPARAM LParam)
+{
+	Myazo& Program=GetInstance();
+	switch(Message){
+	default:
+		return DefWindowProc(WindowHandle,Message,WParam,LParam);
+	}
+	return 0;
+}
+
 Myazo& Myazo::GetInstance(void)
 {
 	static Myazo& Instance=Myazo();
@@ -68,11 +74,28 @@ bool Myazo::Init(void)
 {
 	ScreenSizeX=GetSystemMetrics(SM_CXVIRTUALSCREEN);
 	ScreenSizeY=GetSystemMetrics(SM_CYVIRTUALSCREEN);
+	InitWindow();
 	return true;
 }
+
 bool Myazo::InitWindow(void)
 {
-
+	WNDCLASSEX WndClass;
+	ZeroMemory(&WndClass,sizeof(WndClass));
+	WndClass.lpfnWndProc=WndProc;
+	WndClass.hInstance=GetModuleHandle(nullptr);
+	WndClass.hIcon=(HICON)LoadImage(GetModuleHandle(nullptr),L"",IMAGE_ICON,32,32,0);
+	WndClass.hIconSm=(HICON)LoadImage(GetModuleHandle(nullptr),L"",IMAGE_ICON,16,16,0);
+	WndClass.hCursor=LoadCursor(nullptr,IDC_CROSS);
+	WndClass.lpszClassName
+	
+	MainWindow=DialogWindow(L"MyazoMainWindow",WndProc,
+		(HICON)LoadImage(GetModuleHandle(nullptr),L"",IMAGE_ICON,32,32,0),
+		(HICON)LoadImage(GetModuleHandle(nullptr),L"",IMAGE_ICON,16,16,0));
+	LayerWindow=DialogWindow(L"MyazoLayerWindow",LayerWndProc);
+	AuthWindow=DialogWindow(L"MyazoAuthWindow",AuthWndProc,
+		(HICON)LoadImage(GetModuleHandle(nullptr),L"",IMAGE_ICON,32,32,0),
+		(HICON)LoadImage(GetModuleHandle(nullptr),L"",IMAGE_ICON,16,16,0));
 	return true;
 }
 

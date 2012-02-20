@@ -15,6 +15,7 @@ private:
 	Myazo(void);
 	static LRESULT __stdcall WndProc(HWND WindowHandle,unsigned int Message,WPARAM WParam,LPARAM LParam);
 	static LRESULT __stdcall LayerWndProc(HWND WindowHandle,unsigned int Message,WPARAM WParam,LPARAM LParam);
+	static LRESULT __stdcall AuthWndProc(HWND WindowHandle,unsigned int Message,WPARAM WParam,LPARAM LParam);
 	bool InitWindow(void);
 	bool Upload(void);
 	void ProcessKeyMessage(unsigned int KeyChar);
