@@ -1,5 +1,4 @@
 #include "ShareHeaders.h"
-#undef SendMessage
 
 class Window
 {
@@ -25,11 +24,11 @@ public:
 	bool Move(int X,int Y,int Width,int Height,bool Redraw=true);
 	bool Show(int Flag);
 	bool Update(void);
-	long SendMessage(unsigned int Message,WPARAM WParam,LPARAM LParam);
+	long Message(unsigned int Message,WPARAM WParam,LPARAM LParam);
 	HWND GetWindowHandle(void)const;
 	int GetWindowID(void)const;
 	Window* GetParentWindow(void)const;
-	const std::wstring GetWindowClassName(void)const;
+	std::wstring GetWindowClassName(void)const;
 	unsigned long GetWindowStyle(void)const;
 	void SetWindowStyle(unsigned long Style);
 	unsigned long GetWindowStyleEx(void)const;

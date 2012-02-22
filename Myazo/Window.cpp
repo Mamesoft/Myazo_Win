@@ -44,7 +44,7 @@ Window::Window(std::wstring ClassName,int ID,Window* ParentWindow)
 
 void Window::Init(void)
 {
-	WindowHandle.reset(new HWND(),[](HWND Obj){if(Obj&&IsWindow(Obj)) DestroyWindow(Obj);});
+	WindowHandle.reset(new HWND(),[](HWND* Obj){if(Obj&&IsWindow(*Obj)) DestroyWindow(*Obj);});
 	ID=std::make_shared<int>();
 	ChildControls=std::make_shared<std::vector<Window>>();
 	*WindowHandle=nullptr;
@@ -58,6 +58,10 @@ bool Window::Create(std::wstring Caption,unsigned long WindowStyle,int X,int Y,i
 	if(!*WindowHandle){
 		*WindowHandle=CreateWindowEx(0,WindowClassName.c_str(),Caption.c_str(),WindowStyle,
 			X,Y,Width,Height,ParentWindow?ParentWindow->GetWindowHandle():nullptr,(HMENU)*ID,GetModuleHandle(nullptr),nullptr);
+	}else if(!IsWindow(*WindowHandle)){
+		*WindowHandle=nullptr;
+		ChildControls->clear();
+		return Create(Caption,WindowStyle,X,Y,Width,Height);
 	}else return false;
 	return *WindowHandle?true:false;
 }
@@ -67,6 +71,10 @@ bool Window::Create(std::wstring Caption,unsigned long WindowStyle,unsigned long
 	if(!*WindowHandle){
 		*WindowHandle=CreateWindowEx(WindowStyleEx,WindowClassName.c_str(),Caption.c_str(),WindowStyle,
 			X,Y,Width,Height,ParentWindow?ParentWindow->GetWindowHandle():nullptr,(HMENU)*ID,GetModuleHandle(nullptr),nullptr);
+	}else if(!IsWindow(*WindowHandle)){
+		*WindowHandle=nullptr;
+		ChildControls->clear();
+		return Create(Caption,WindowStyle,WindowStyleEx,X,Y,Width,Height);
 	}else return false;
 	return *WindowHandle?true:false;
 }
@@ -78,10 +86,16 @@ bool Window::IsCreated(void)const
 
 bool Window::Destroy(void)
 {
-	return IsWindow(*WindowHandle)&&DestroyWindow(*WindowHandle)?ChildControls->clear(),*WindowHandle=nullptr,true:false;
+	if(IsWindow(*WindowHandle)){
+		return DestroyWindow(*WindowHandle)?ChildControls->clear(),*WindowHandle=nullptr,true:false;
+	}else if(*WindowHandle){
+		ChildControls->clear();
+		*WindowHandle=nullptr;
+		return true;
+	}else return false;
 }
 
-bool Window::Move(int X,int Y,int Width,int Height,bool Redraw=true)
+bool Window::Move(int X,int Y,int Width,int Height,bool Redraw)
 {
 	return IsWindow(*WindowHandle)&&MoveWindow(*WindowHandle,X,Y,Width,Height,Redraw)?true:false;
 }
@@ -93,13 +107,12 @@ bool Window::Show(int Flag)
 
 bool Window::Update(void)
 {
-	if(IsWindow(*WindowHandle)&&UpdateWindow(*WindowHandle)) return true;
-	else return false;
+	return IsWindow(*WindowHandle)&&UpdateWindow(*WindowHandle)?true:false;
 }
 
-long Window::SendMessage(unsigned int Message,unsigned int WParam,long LParam)
+long Window::Message(unsigned int Message,unsigned int WParam,long LParam)
 {
-	return IsWindow(*WindowHandle)?SendMessageW(*WindowHandle,Message,WParam,LParam):0;
+	return IsWindow(*WindowHandle)?SendMessage(*WindowHandle,Message,WParam,LParam):0;
 }
 
 HWND Window::GetWindowHandle(void)const
@@ -115,6 +128,11 @@ int Window::GetWindowID(void)const
 Window* Window::GetParentWindow(void)const
 {
 	return ParentWindow;
+}
+
+std::wstring Window::GetWindowClassName(void)const
+{
+	return std::wstring(WindowClassName);
 }
 
 unsigned long Window::GetWindowStyle(void)const
@@ -313,11 +331,16 @@ DialogWindow::DialogWindow(const WNDCLASSEX& WindowClass,Window* ParentWindow):W
 	return;
 }
 
+DialogWindow::~DialogWindow(void)
+{
+	return;
+}
+
 void DialogWindow::Init(void)
 {
 	WindowClass=std::make_shared<WNDCLASSEX>();
 	ClassAtom.reset(new unsigned short,
-		[](unsigned short Obj){if(Obj) UnregisterClass((wchar_t*)Obj,GetModuleHandle(nullptr));});
+		[](unsigned short* Obj){if(*Obj) UnregisterClass((wchar_t*)*Obj,GetModuleHandle(nullptr));});
 	ZeroMemory(WindowClass.get(),sizeof(*WindowClass));
 	WindowClass->cbSize=sizeof(WindowClass);
 	WindowClass->hbrBackground=(HBRUSH)COLOR_WINDOW;

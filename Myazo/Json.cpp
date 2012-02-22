@@ -82,20 +82,19 @@ namespace Json
 
 	std::wstring Parser::Create(const Item& Root)
 	{
-		std::stack<const Item&> Level;
-		std::stack<Iterator> IteratorLevel;
+		std::stack<const Item> Level;
+		std::stack<IteratorContainer> IteratorLevel;
 		std::wstring JsonString;
 		std::wostringstream Converter;
 		Converter.precision(10);
 		Converter.setf(std::ios::scientific);
 		JsonString.reserve(1000);
-		IteratorLevel.push(Iterator());
 		if(Root.Type()==Type::Hash){
 			JsonString+=L'{';
-			IteratorLevel.top().Hash=Root.Hash().cbegin();
+			IteratorLevel.push(IteratorContainer(Root.Hash().cbegin()));
 		}else if(Root.Type()==Type::Array){
 			JsonString+=L'[';
-			IteratorLevel.top().Array=Root.Array().cbegin();
+			IteratorLevel.push(IteratorContainer(Root.Array().cbegin()));
 		}else if(Root.Type()==Type::Null) return JsonString;
 		else throw std::exception("配列又は連想配列を表す型は、Json::Array\n又はJson::Hashでなければなりません。");
 		Level.push(Root);
@@ -114,12 +113,12 @@ namespace Json
 					case Type::Int:
 						Converter<<Member.Int();
 						JsonString+=Converter.str();
-						Converter.str(String());
+						Converter.str(Json::JsonString());
 						break;
 					case Type::Double:
 						Converter<<Member.Double();
 						JsonString+=Converter.str();
-						Converter.str(String());
+						Converter.str(Json::JsonString());
 						break;
 					case Type::Bool:
 						JsonString+=Member.Bool()?L"true":L"false";
@@ -131,15 +130,13 @@ namespace Json
 						JsonString+=L'{';
 						Level.push(Member);
 						IteratorLevel.top().Hash++;
-						IteratorLevel.push(Iterator());
-						IteratorLevel.top().Hash=Member.Hash().cbegin();
+						IteratorLevel.push(IteratorContainer(Member.Hash().cbegin()));
 						continue;
 					case Type::Array:
 						JsonString+=L'[';
 						Level.push(Member);
 						IteratorLevel.top().Hash++;
-						IteratorLevel.push(Iterator());
-						IteratorLevel.top().Array=Member.Array().cbegin();
+						IteratorLevel.push(IteratorContainer(Member.Array().cbegin()));
 						continue;
 					}
 					JsonString+=L',';
@@ -160,12 +157,12 @@ namespace Json
 					case Type::Int:
 						Converter<<Member.Int();
 						JsonString+=Converter.str();
-						Converter.str(String());
+						Converter.str(Json::JsonString());
 						break;
 					case Type::Double:
 						Converter<<Member.Double();
 						JsonString+=Converter.str();
-						Converter.str(String());
+						Converter.str(Json::JsonString());
 						break;
 					case Type::Bool:
 						JsonString+=Member.Bool()?L"true":L"false";
@@ -177,15 +174,13 @@ namespace Json
 						JsonString+=L'{';
 						Level.push(Member);
 						IteratorLevel.top().Array++;
-						IteratorLevel.push(Iterator());
-						IteratorLevel.top().Hash=Member.Hash().cbegin();
+						IteratorLevel.push(IteratorContainer(Member.Hash().cbegin()));
 						continue;
 					case Type::Array:
 						JsonString+=L'[';
 						Level.push(Member);
 						IteratorLevel.top().Array++;
-						IteratorLevel.push(Iterator());
-						IteratorLevel.top().Array=Member.Array().cbegin();
+						IteratorLevel.push(IteratorContainer(Member.Array().cbegin()));
 						continue;
 					}
 					JsonString+=L',';
@@ -204,7 +199,7 @@ namespace Json
 	Item Parser::Parse(const std::wstring& JsonString)
 	{
 		auto Char=JsonString.cbegin();
-		std::stack<Item&> Level;
+		std::stack<Item> Level;
 		Item Root;
 		std::wistringstream Converter;
 		Converter.precision(10);

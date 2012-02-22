@@ -87,15 +87,21 @@ bool Myazo::InitWindow(void)
 	WndClass.hIcon=(HICON)LoadImage(GetModuleHandle(nullptr),L"",IMAGE_ICON,32,32,0);
 	WndClass.hIconSm=(HICON)LoadImage(GetModuleHandle(nullptr),L"",IMAGE_ICON,16,16,0);
 	WndClass.hCursor=LoadCursor(nullptr,IDC_CROSS);
-	WndClass.lpszClassName
-	
-	MainWindow=DialogWindow(L"MyazoMainWindow",WndProc,
-		(HICON)LoadImage(GetModuleHandle(nullptr),L"",IMAGE_ICON,32,32,0),
-		(HICON)LoadImage(GetModuleHandle(nullptr),L"",IMAGE_ICON,16,16,0));
-	LayerWindow=DialogWindow(L"MyazoLayerWindow",LayerWndProc);
-	AuthWindow=DialogWindow(L"MyazoAuthWindow",AuthWndProc,
-		(HICON)LoadImage(GetModuleHandle(nullptr),L"",IMAGE_ICON,32,32,0),
-		(HICON)LoadImage(GetModuleHandle(nullptr),L"",IMAGE_ICON,16,16,0));
+	WndClass.lpszClassName=L"MyazoMainWindow";	
+	MainWindow=DialogWindow(WndClass);
+	if(!MainWindow.Register()) return false;
+	WndClass.style=CS_VREDRAW|CS_HREDRAW;
+	WndClass.hbrBackground=(HBRUSH)GetStockObject(WHITE_BRUSH);
+	WndClass.lpfnWndProc=LayerWndProc;
+	WndClass.lpszClassName=L"MyazoLayerWindow";
+	LayerWindow=DialogWindow(WndClass);
+	if(!LayerWindow.Register()) return false;
+	WndClass.hbrBackground=(HBRUSH)COLOR_WINDOW;
+	WndClass.lpfnWndProc=AuthWndProc;
+	WndClass.hCursor=LoadCursor(nullptr,IDC_ARROW);
+	WndClass.lpszClassName=L"MyazoAuthWindow";
+	AuthWindow=DialogWindow(WndClass);
+	if(!AuthWindow.Register()) return false;
 	return true;
 }
 
@@ -117,7 +123,7 @@ bool Myazo::Upload(void)
 	return true;
 }
 
-void Myazo::ProcessKeyMessage(unsigned int KeyChar)throw
+void Myazo::ProcessKeyMessage(unsigned int KeyChar)
 {
 	switch(KeyChar){
 	case 'P':

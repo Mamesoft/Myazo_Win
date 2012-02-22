@@ -77,13 +77,13 @@ namespace Json
 			Bool_Value.reset(new bool);
 			break;
 		case Type::String:
-			String_Value.reset(new Json::String);
+			String_Value.reset(new JsonString);
 			break;
 		case Type::Hash:
-			Hash_Value.reset(new Json::Hash);
+			Hash_Value.reset(new JsonHash);
 			break;
 		case Type::Array:
-			Array_Value.reset(new Json::Array);
+			Array_Value.reset(new JsonArray);
 			break;
 		}
 		IsNull_Value=ItemType==Type::Null?true:false;
@@ -108,19 +108,19 @@ namespace Json
 		return;
 	}
 
-	Item::Item(const Json::String& String):String_Value(new Json::String(String))
+	Item::Item(const JsonString& String):String_Value(new JsonString(String))
 	{
 		Type_Value=Type::String;
 		return;
 	}
 
-	Item::Item(const Json::Hash& Hash):Hash_Value(new Json::Hash(Hash))
+	Item::Item(const JsonHash& Hash):Hash_Value(new JsonHash(Hash))
 	{
 		Type_Value=Type::Hash;
 		return;
 	}
 
-	Item::Item(const Json::Array& Array):Array_Value(new Json::Array(Array))
+	Item::Item(const JsonArray& Array):Array_Value(new JsonArray(Array))
 	{
 		Type_Value=Type::Array;
 		return;
@@ -144,21 +144,26 @@ namespace Json
 		return;
 	}
 
-	Item::Item(Json::String&& String):String_Value(new Json::String(std::move(String)))
+	Item::Item(JsonString&& String):String_Value(new JsonString(std::move(String)))
 	{
 		Type_Value=Type::String;
 		return;
 	}
 
-	Item::Item(Json::Hash&& Hash):Hash_Value(new Json::Hash(std::move(Hash)))
+	Item::Item(JsonHash&& Hash):Hash_Value(new JsonHash(std::move(Hash)))
 	{
 		Type_Value=Type::Hash;
 		return;
 	}
 
-	Item::Item(Json::Array&& Array):Array_Value(new Json::Array(std::move(Array)))
+	Item::Item(JsonArray&& Array):Array_Value(new JsonArray(std::move(Array)))
 	{
 		Type_Value=Type::Array;
+		return;
+	}
+
+	Item::~Item(void)
+	{
 		return;
 	}
 
@@ -208,37 +213,37 @@ namespace Json
 		else throw std::exception();
 	}
 
-	String& Item::String(void)
+	JsonString& Item::String(void)
 	{
 		if(String_Value) return *String_Value;
 		else throw std::exception();
 	}
 
-	const String& Item::String(void)const
+	const JsonString& Item::String(void)const
 	{
 		if(String_Value) return *String_Value;
 		else throw std::exception();
 	}
 
-	Hash& Item::Hash(void)
+	JsonHash& Item::Hash(void)
 	{
 		if(Hash_Value) return *Hash_Value;
 		else throw std::exception();
 	}
 
-	const Hash& Item::Hash(void)const
+	const JsonHash& Item::Hash(void)const
 	{
 		if(Hash_Value) return *Hash_Value;
 		else throw std::exception();
 	}
 
-	Array& Item::Array(void)
+	JsonArray& Item::Array(void)
 	{
 		if(Array_Value) return *Array_Value;
 		else throw std::exception();
 	}
 
-	const Array& Item::Array(void)const
+	const JsonArray& Item::Array(void)const
 	{
 		if(Array_Value) return *Array_Value;
 		else throw std::exception();

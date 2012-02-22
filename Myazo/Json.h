@@ -15,9 +15,9 @@ namespace Json
 	};
 
 	class Item;
-	typedef std::map<std::wstring,Item> Hash;
-	typedef std::vector<Item> Array;
-	typedef std::wstring String;
+	typedef std::map<std::wstring,Item> JsonHash;
+	typedef std::vector<Item> JsonArray;
+	typedef std::wstring JsonString;
 
 	class Item
 	{
@@ -25,9 +25,9 @@ namespace Json
 		std::shared_ptr<long long> Int_Value;
 		std::shared_ptr<double> Double_Value;
 		std::shared_ptr<bool> Bool_Value;
-		std::shared_ptr<std::wstring> String_Value;
-		std::shared_ptr<Json::Hash> Hash_Value;
-		std::shared_ptr<Json::Array> Array_Value;
+		std::shared_ptr<JsonString> String_Value;
+		std::shared_ptr<JsonHash> Hash_Value;
+		std::shared_ptr<JsonArray> Array_Value;
 		Type Type_Value;
 		bool IsNull_Value;
 		
@@ -39,15 +39,15 @@ namespace Json
 		Item(const long long& Int);
 		Item(const double& Double);
 		Item(const bool& Bool);
-		Item(const String& String);
-		Item(const Json::Hash& Hash);
-		Item(const Json::Array& Array);
+		Item(const JsonString& String);
+		Item(const JsonHash& Hash);
+		Item(const JsonArray& Array);
 		Item(long long&& Int);
 		Item(double&& Double);
 		Item(bool&& Bool);
-		Item(String&& String);
-		Item(Json::Hash&& Hash);
-		Item(Json::Array&& Array);
+		Item(JsonString&& String);
+		Item(JsonHash&& Hash);
+		Item(JsonArray&& Array);
 		~Item(void);
 		Type Type(void)const;
 		bool IsNull(void)const;
@@ -59,10 +59,10 @@ namespace Json
 		const bool& Bool(void)const;
 		std::wstring& String(void);
 		const std::wstring& String(void)const;
-		Json::Hash& Hash(void);
-		const Json::Hash& Hash(void)const;
-		Json::Array& Array(void);
-		const Json::Array& Array(void)const;
+		JsonHash& Hash(void);
+		const JsonHash& Hash(void)const;
+		JsonArray& Array(void);
+		const JsonArray& Array(void)const;
 		Item& operator=(const Item& LeftRef);
 		Item& operator=(Item&& RightRef);
 		bool operator==(const Item& LeftRef)const;
@@ -73,10 +73,23 @@ namespace Json
 	class Parser
 	{
 	private:
-		union Iterator
+		struct IteratorContainer
 		{
-			Hash::const_iterator& Hash;
-			Array::const_iterator& Array;
+			Type IteratorType;
+			JsonHash::const_iterator Hash;
+			JsonArray::const_iterator Array;
+			IteratorContainer(JsonHash::const_iterator HashIterator)
+			{
+				IteratorType=Type::Hash;
+				Hash=HashIterator;
+				return;
+			}
+			IteratorContainer(JsonArray::const_iterator ArrayIterator)
+			{
+				IteratorType=Type::Array;
+				Array=ArrayIterator;
+				return;
+			}
 		};
 
 		bool ParseBool(std::wstring::const_iterator& Char);

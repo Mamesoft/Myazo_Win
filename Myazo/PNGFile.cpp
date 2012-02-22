@@ -1,5 +1,4 @@
 #include "PNGFile.h"
-#include "PNGFile.h"
 
 PNGFile::PNGFile(void)
 {
