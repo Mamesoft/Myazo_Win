@@ -4,10 +4,12 @@ class PNGFile
 {
 private:
 	CLSID PNGEncoderClassID;
+	ULONG_PTR GdiplusToken;
+	Gdiplus::GdiplusStartupInput GdiplusInput;
 
 public:
-	PNGFile(void);
 	~PNGFile(void);
+	bool Init(void);
 	CLSID GetPNGEncoderClassID(void);
 	bool IsWellHeader(std::wstring FileName);
 	bool Save(Gdiplus::Bitmap& InputImage,std::wstring FileName);

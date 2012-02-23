@@ -14,6 +14,7 @@
 #include <stack>
 #include <regex>
 #include <functional>
+#include <array>
 
 #include <cstring>
 #include <ctime>

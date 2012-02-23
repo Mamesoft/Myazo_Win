@@ -1,25 +1,23 @@
 #include "PNGFile.h"
 
-PNGFile::PNGFile(void)
+PNGFile::~PNGFile(void)
 {
-	std::wstring TargetMimeType=L"image/png";
-	unsigned Size,EncoderCount;
-	Gdiplus::GetImageEncodersSize(&EncoderCount,&Size);
-	auto Codecs=(Gdiplus::ImageCodecInfo*)new char[Size];
-	Gdiplus::GetImageEncoders(EncoderCount,Size,Codecs);
-	for(int i=0;i<EncoderCount;i++){
-		if(!TargetMimeType.compare(Codecs[i].MimeType)){
-			PNGEncoderClassID=Codecs[i].Clsid;
-			break;
-		}
-	}
-	delete[] Codecs;
+	Gdiplus::GdiplusShutdown(GdiplusToken);
 	return;
 }
 
-PNGFile::~PNGFile(void)
+bool PNGFile::Init(void)
 {
-	return;
+	Gdiplus::GdiplusStartup(&GdiplusToken,&GdiplusInput,nullptr);
+	std::wstring TargetMimeType=L"image/png";
+	unsigned Size,EncoderCount;
+	Gdiplus::GetImageEncodersSize(&EncoderCount,&Size);
+	auto Codecs=std::vector<Gdiplus::ImageCodecInfo>(EncoderCount);
+	Gdiplus::GetImageEncoders(EncoderCount,Size,Codecs.data());
+	auto Codec=std::find_if(Codecs.begin(),Codecs.end(),
+		[&](Gdiplus::ImageCodecInfo& Obj){return !TargetMimeType.compare(Obj.MimeType)?true:false;});
+	PNGEncoderClassID=(*Codec).Clsid;
+	return true;
 }
 
 CLSID PNGFile::GetPNGEncoderClassID(void)
@@ -29,12 +27,11 @@ CLSID PNGFile::GetPNGEncoderClassID(void)
 
 bool PNGFile::IsWellHeader(std::wstring FileName)
 {
-	unsigned long long PNGFileHeader=0x0A1A0A0D474E5089,TargetFileHeader;
+	std::array<unsigned char,8> WellHeader={0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A},Header;
 	std::wifstream File(FileName,std::ios_base::in|std::ios_base::binary);
-	File.read((wchar_t*)&TargetFileHeader,sizeof(TargetFileHeader));
+	File.read((wchar_t*)Header.data(),sizeof(Header[0])*Header.size());
 	File.close();
-	if(PNGFileHeader!=TargetFileHeader) return false;
-	return true;
+	return Header==WellHeader?true:false;
 }
 
 bool PNGFile::Save(Gdiplus::Bitmap& InputImage,std::wstring FileName)

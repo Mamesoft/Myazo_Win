@@ -7,12 +7,10 @@ Myazo::Myazo(const Myazo&)
 
 Myazo::Myazo(void)
 {
-	Instance=GetModuleHandle(nullptr);
+	Instance=nullptr;
 	UploadAsPrivate=false;
 	UtilityMode=false;
 	OffsetX=OffsetY=0;
-	ScreenSizeX=0;
-	ScreenSizeY=0;
 	return;
 }
 
@@ -72,9 +70,20 @@ Myazo& Myazo::GetInstance(void)
 
 bool Myazo::Init(void)
 {
-	ScreenSizeX=GetSystemMetrics(SM_CXVIRTUALSCREEN);
-	ScreenSizeY=GetSystemMetrics(SM_CYVIRTUALSCREEN);
-	InitWindow();
+	int X,Y,Width,Height;
+	Instance=GetModuleHandle(nullptr);
+	if(!ImageEncoder.Init()) return false;
+	X=GetSystemMetrics(SM_XVIRTUALSCREEN);
+	Y=GetSystemMetrics(SM_YVIRTUALSCREEN);
+	Width=GetSystemMetrics(SM_CXVIRTUALSCREEN);
+	Height=GetSystemMetrics(SM_CYVIRTUALSCREEN);
+	if(!InitWindow()) return false;
+	if(!MainWindow.Create(L"",WS_POPUP,WS_EX_TRANSPARENT|WS_EX_TOOLWINDOW|WS_EX_TOPMOST|WS_EX_NOACTIVATE,0,0,0,0)) return false;
+	MainWindow.Move(X,Y,Width,Height,false);
+	MainWindow.Show(SW_SHOW);
+	MainWindow.Update();
+	if(!LayerWindow.Create(L"Myazo",WS_POPUP,WS_EX_TOOLWINDOW|WS_EX_LAYERED|WS_EX_NOACTIVATE,100,100,300,300)) return false;
+	SetLayeredWindowAttributes(LayerWindow.GetWindowHandle(),0x000000FF,100,LWA_COLORKEY|LWA_ALPHA);
 	return true;
 }
 
@@ -84,8 +93,8 @@ bool Myazo::InitWindow(void)
 	ZeroMemory(&WndClass,sizeof(WndClass));
 	WndClass.lpfnWndProc=WndProc;
 	WndClass.hInstance=GetModuleHandle(nullptr);
-	WndClass.hIcon=(HICON)LoadImage(GetModuleHandle(nullptr),L"",IMAGE_ICON,32,32,0);
-	WndClass.hIconSm=(HICON)LoadImage(GetModuleHandle(nullptr),L"",IMAGE_ICON,16,16,0);
+	WndClass.hIcon=(HICON)LoadImage(Instance,L"",IMAGE_ICON,32,32,0);
+	WndClass.hIconSm=(HICON)LoadImage(Instance,L"",IMAGE_ICON,16,16,0);
 	WndClass.hCursor=LoadCursor(nullptr,IDC_CROSS);
 	WndClass.lpszClassName=L"MyazoMainWindow";	
 	MainWindow=DialogWindow(WndClass);
@@ -134,7 +143,8 @@ void Myazo::ProcessKeyMessage(unsigned int KeyChar)
 	case 'A':
 		int WindowWidth=300,WindowHeight=150;
 		AuthWindow.Create(L"アカウントの認証",WS_CAPTION|WS_SYSMENU,0,
-			(ScreenSizeX-WindowWidth)/2,(ScreenSizeY-WindowHeight)/2,WindowWidth,WindowHeight);
+			(GetSystemMetrics(SM_CXVIRTUALSCREEN)-WindowWidth)/2,
+			(GetSystemMetrics(SM_CYVIRTUALSCREEN)-WindowHeight)/2,WindowWidth,WindowHeight);
 		break;
 	}
 	return;

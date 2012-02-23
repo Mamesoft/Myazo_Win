@@ -9,7 +9,7 @@ private:
 	bool UploadAsPrivate,UtilityMode;
 	PNGFile ImageEncoder;
 	DialogWindow MainWindow,LayerWindow,AuthWindow;
-	int ScreenSizeX,ScreenSizeY,OffsetX,OffsetY;
+	int OffsetX,OffsetY;
 
 	Myazo(const Myazo&);
 	Myazo(void);
