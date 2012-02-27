@@ -24,6 +24,7 @@ public:
 	bool Move(int X,int Y,int Width,int Height,bool Redraw=true);
 	bool Show(int Flag);
 	bool Update(void);
+	bool ShowAndUpdate(int Flag);
 	long Message(unsigned int Message,WPARAM WParam,LPARAM LParam);
 	HWND GetWindowHandle(void)const;
 	int GetWindowID(void)const;

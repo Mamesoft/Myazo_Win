@@ -6,10 +6,10 @@ class Myazo
 {
 private:
 	HINSTANCE Instance;
-	bool UploadAsPrivate,UtilityMode;
+	bool UploadAsPrivate,UtilityMode,CaptureStarted;
 	PNGFile ImageEncoder;
 	DialogWindow MainWindow,LayerWindow,AuthWindow;
-	int OffsetX,OffsetY;
+	RECT CaptureRect;
 
 	Myazo(const Myazo&);
 	Myazo(void);
@@ -17,8 +17,13 @@ private:
 	static LRESULT __stdcall LayerWndProc(HWND WindowHandle,unsigned int Message,WPARAM WParam,LPARAM LParam);
 	static LRESULT __stdcall AuthWndProc(HWND WindowHandle,unsigned int Message,WPARAM WParam,LPARAM LParam);
 	bool InitWindow(void);
+	void ProcessKeyMessage(void);
+	void MoveLayerWindow(void);
+	void StartCapture(int X,int Y);
+	void UpdatePosition(int X,int Y);
+	void EndCapture(int X, int Y);
+	void GetScreenShot(void);
 	bool Upload(void);
-	void ProcessKeyMessage(unsigned int KeyChar);
 	Myazo& operator=(const Myazo&);
 	Myazo& operator=(Myazo&&);
 

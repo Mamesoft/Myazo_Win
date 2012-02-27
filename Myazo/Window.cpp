@@ -110,6 +110,11 @@ bool Window::Update(void)
 	return IsWindow(*WindowHandle)&&UpdateWindow(*WindowHandle)?true:false;
 }
 
+bool Window::ShowAndUpdate(int Flag)
+{
+	return IsWindow(*WindowHandle)&&ShowWindow(*WindowHandle,Flag)&&UpdateWindow(*WindowHandle)?true:false;
+}
+
 long Window::Message(unsigned int Message,unsigned int WParam,long LParam)
 {
 	return IsWindow(*WindowHandle)?SendMessage(*WindowHandle,Message,WParam,LParam):0;
