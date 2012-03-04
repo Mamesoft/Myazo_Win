@@ -65,8 +65,6 @@ namespace Json
 		const JsonArray& Array(void)const;
 		Item& operator=(const Item& LeftRef);
 		Item& operator=(Item&& RightRef);
-		bool operator==(const Item& LeftRef)const;
-		bool operator!=(const Item& LeftRef)const;
 
 	};
 
@@ -102,5 +100,8 @@ namespace Json
 		Item Parse(const std::wstring& JsonString);
 
 	};
-	
+
+	bool operator==(const Item& Left,const Item& Right);
+	bool operator!=(const Item& Left,const Item& Right);
+
 }

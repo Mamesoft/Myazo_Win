@@ -1,5 +1,6 @@
 #include "ShareHeaders.h"
 #include "Window.h"
+#include "Json.h"
 #include "PNGFile.h"
 
 class Myazo
@@ -10,6 +11,9 @@ private:
 	PNGFile ImageEncoder;
 	DialogWindow MainWindow,LayerWindow,AuthWindow;
 	RECT CaptureRect;
+	std::shared_ptr<Gdiplus::Graphics> LayerWindowGraphics;
+	std::shared_ptr<Gdiplus::Font> LayerWindowFont;
+	const std::wstring TempFileNamePrefix;
 
 	Myazo(const Myazo&);
 	Myazo(void);
@@ -19,6 +23,7 @@ private:
 	bool InitWindow(void);
 	void ProcessKeyMessage(void);
 	void MoveLayerWindow(void);
+	bool DrawLayerWindowContent(void);
 	void StartCapture(int X,int Y);
 	void UpdatePosition(int X,int Y);
 	void EndCapture(int X, int Y);

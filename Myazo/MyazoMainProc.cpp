@@ -34,12 +34,7 @@ LRESULT __stdcall Myazo::LayerWndProc(HWND WindowHandle,unsigned int Message,WPA
 	Myazo& Program=GetInstance();
 	switch(Message){
 	case WM_ERASEBKGND:
-		{
-			std::shared_ptr<Gdiplus::Graphics> LayerGraphics;
-			LayerGraphics.reset(new Gdiplus::Graphics(WindowHandle));
-			LayerGraphics->Clear(Gdiplus::Color(100,100,100));
-			return true;
-		}
+		return Program.DrawLayerWindowContent();
 	default:
 		return DefWindowProc(WindowHandle,Message,WParam,LParam);
 	}
@@ -80,6 +75,25 @@ void Myazo::MoveLayerWindow(void)
 	return;
 }
 
+bool Myazo::DrawLayerWindowContent(void)
+{
+	std::shared_ptr<Gdiplus::StringFormat> Layout(new Gdiplus::StringFormat());
+	std::shared_ptr<Gdiplus::SolidBrush> BlackBrush(new Gdiplus::SolidBrush(Gdiplus::Color::Black)),WhiteBrush(new Gdiplus::SolidBrush(Gdiplus::Color::White));
+	Layout->SetAlignment(Gdiplus::StringAlignment::StringAlignmentFar);
+	Layout->SetLineAlignment(Gdiplus::StringAlignment::StringAlignmentFar);
+	auto LayoutRect=Gdiplus::RectF(
+		CaptureRect.left<CaptureRect.right?CaptureRect.left:CaptureRect.right,
+		CaptureRect.top<CaptureRect.bottom?CaptureRect.top:CaptureRect.bottom,
+		std::abs(CaptureRect.right-CaptureRect.left)-10,
+		std::abs(CaptureRect.bottom-CaptureRect.top)-10);
+	LayerWindowGraphics->Clear(Gdiplus::Color(100,100,100));
+	LayerWindowGraphics->DrawString(L"",0,&*LayerWindowFont,LayoutRect,&*Layout,&*BlackBrush);
+	LayoutRect.Width--;
+	LayoutRect.Height--;
+	LayerWindowGraphics->DrawString(L"",0,&*LayerWindowFont,LayoutRect,&*Layout,&*WhiteBrush);
+	return true;
+}
+
 void Myazo::StartCapture(int X,int Y)
 {
 	CaptureStarted=true;
@@ -110,12 +124,33 @@ void Myazo::EndCapture(int X,int Y)
 
 void Myazo::GetScreenShot(void)
 {
-	Gdiplus::Graphics Desktop((HWND)nullptr);
-	int Width=std::abs(CaptureRect.right-CaptureRect.left),Height=std::abs(CaptureRect.bottom-CaptureRect.top);
+	HDC DesktopDC=GetDC(nullptr),CaptureDC=CreateCompatibleDC(DesktopDC);
+	unsigned int X=CaptureRect.left<CaptureRect.right?CaptureRect.left:CaptureRect.right,
+		Y=CaptureRect.top<CaptureRect.bottom?CaptureRect.top:CaptureRect.bottom,
+		Width=std::abs(CaptureRect.right-CaptureRect.left),
+		Height=std::abs(CaptureRect.bottom-CaptureRect.top);
+	HBITMAP CaptureBitmapHandle=CreateCompatibleBitmap(DesktopDC,Width,Height),PrevBitmapHandle=(HBITMAP)SelectObject(CaptureDC,CaptureBitmapHandle);
+	BitBlt(CaptureDC,0,0,Width,Height,DesktopDC,X,Y,SRCCOPY);
+	MainWindow.Show(SW_HIDE);
+	std::vector<wchar_t> TempFileName;
+	TempFileName.reserve(MAX_PATH*2);
+	GetTempPath(MAX_PATH,TempFileName.data());
+	GetTempFileName(TempFileName.data(),TempFileNamePrefix.c_str(),0,TempFileName.data());
+	ImageEncoder.Save(CaptureBitmapHandle,TempFileName.data());
+	SelectObject(CaptureDC,PrevBitmapHandle);
+	DeleteObject(CaptureBitmapHandle);
+	DeleteDC(CaptureDC);
+	ReleaseDC(nullptr,DesktopDC);
 	return;
 }
 
 bool Myazo::Upload(void)
 {
+	std::wstring UploadDomein=L"myazo.net",
+		UploadScriptPath=L"upload.php",
+		Boundary=L"----BOUNDARYBOUNDARY----",
+		NewLine=L"\x000D\x000A",
+		Header=L"Content-Type: multipart/form-data; boundary="+Boundary;
+
 	return true;
 }

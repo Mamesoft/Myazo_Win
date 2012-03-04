@@ -5,10 +5,11 @@ Myazo::Myazo(const Myazo&)
 	return;
 }
 
-Myazo::Myazo(void)
+Myazo::Myazo(void):TempFileNamePrefix(L"myazo")
 {
 	Instance=nullptr;
 	UploadAsPrivate=UtilityMode=CaptureStarted=false;
+	ZeroMemory(&CaptureRect,sizeof(CaptureRect));
 	return;
 }
 
@@ -51,6 +52,8 @@ bool Myazo::Init(void)
 	if(!LayerWindow.Create(L"Myazo",WS_POPUP,WS_EX_TOOLWINDOW|WS_EX_LAYERED|WS_EX_NOACTIVATE,100,100,300,300)) return false;
 	SetLayeredWindowAttributes(LayerWindow.GetWindowHandle(),0x000000FF,100,LWA_COLORKEY|LWA_ALPHA);
 	SetTimer(MainWindow.GetWindowHandle(),100,100,nullptr);
+	LayerWindowGraphics.reset(new Gdiplus::Graphics(LayerWindow.GetWindowHandle()));
+	LayerWindowFont.reset(new Gdiplus::Font(L"Tahoma",8));
 	return true;
 }
 

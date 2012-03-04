@@ -44,7 +44,7 @@ Window::Window(std::wstring ClassName,int ID,Window* ParentWindow)
 
 void Window::Init(void)
 {
-	WindowHandle.reset(new HWND(),[](HWND* Obj){if(Obj&&IsWindow(*Obj)) DestroyWindow(*Obj);});
+	WindowHandle.reset(new HWND(),[](HWND* Obj){if(Obj&&IsWindow(*Obj)) DestroyWindow(*Obj);delete Obj;});
 	ID=std::make_shared<int>();
 	ChildControls=std::make_shared<std::vector<Window>>();
 	*WindowHandle=nullptr;
@@ -250,16 +250,6 @@ Window& Window::operator=(Window&& RightRef)
 	return *this;
 }
 
-bool Window::operator==(const Window& LeftRef)const
-{
-	return *WindowHandle==*LeftRef.WindowHandle&&*ID==*LeftRef.ID&&WindowClassName==LeftRef.WindowClassName?true:false;
-}
-
-bool Window::operator!=(const Window& LeftRef)const
-{
-	return !operator==(LeftRef);
-}
-
 DialogWindow::DialogWindow(void)
 {
 	Init();
@@ -345,7 +335,7 @@ void DialogWindow::Init(void)
 {
 	WindowClass=std::make_shared<WNDCLASSEX>();
 	ClassAtom.reset(new unsigned short,
-		[](unsigned short* Obj){if(*Obj) UnregisterClass((wchar_t*)*Obj,GetModuleHandle(nullptr));});
+		[](unsigned short* Obj){if(*Obj) UnregisterClass((wchar_t*)*Obj,GetModuleHandle(nullptr));delete Obj;});
 	ZeroMemory(WindowClass.get(),sizeof(*WindowClass));
 	WindowClass->cbSize=sizeof(WindowClass);
 	WindowClass->hbrBackground=(HBRUSH)COLOR_WINDOW;
@@ -366,6 +356,16 @@ bool DialogWindow::Register(void)
 bool DialogWindow::Unregister(void)
 {
 	return *ClassAtom&&UnregisterClass(WindowClassName.c_str(),GetModuleHandle(nullptr))?*ClassAtom=0,true:false;
+}
+
+bool DialogWindow::IsRegistered(void)const
+{
+	return *ClassAtom?true:false;
+}
+
+unsigned short DialogWindow::GetWindowClassAtom(void)const
+{
+	return *ClassAtom;
 }
 
 DialogWindow& DialogWindow::operator=(const DialogWindow& LeftRef)
@@ -395,12 +395,44 @@ DialogWindow& DialogWindow::operator=(DialogWindow&& RightRef)
 	return *this;
 }
 
-bool DialogWindow::operator==(const DialogWindow& LeftRef)const
+bool operator==(const Window& Left,const Window& Right)
 {
-	return *ClassAtom==*LeftRef.ClassAtom&&WindowClassName==LeftRef.WindowClassName&&!std::memcmp(&*WindowClass,&*LeftRef.WindowClass,sizeof(*WindowClass))?true:false;
+	return Left.GetWindowHandle()==Right.GetWindowHandle()&&
+		Left.GetWindowID()==Right.GetWindowID()&&
+		Left.GetWindowClassName()==Right.GetWindowClassName()?true:false;;
 }
 
-bool DialogWindow::operator!=(const DialogWindow& LeftRef)const
+bool operator==(const Window& Left,const HWND& Right)
 {
-	return !operator==(LeftRef);
+	return Left.GetWindowHandle()==Right?true:false;
+}
+
+bool operator!=(const Window& Left,const Window& Right)
+{
+	return !(Left==Right);
+}
+
+bool operator!=(const Window& Left,const HWND& Right)
+{
+	return !(Left==Right);
+}
+
+bool operator==(const DialogWindow& Left,const DialogWindow& Right)
+{
+	return Left.GetWindowClassAtom()==Right.GetWindowClassAtom()&&Left.GetWindowClassName()==Right.GetWindowClassName()?true:false;
+}
+
+bool operator==(const DialogWindow& Left,const HWND& Right)
+{
+	return Left.GetWindowHandle()==Right?true:false;
+}
+
+bool operator!=(const DialogWindow& Left,const DialogWindow& Right)
+{
+	return !(Left==Right);
+}
+
+bool operator!=(const DialogWindow& Left,const HWND& Right)
+{
+	return !(Left==Right);
 }

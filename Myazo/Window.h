@@ -48,8 +48,6 @@ public:
 	bool IsExistControlByID(int ControlID);
 	Window& operator=(const Window& LeftRef);
 	Window& operator=(Window&& RightRef);
-	bool operator==(const Window& LeftRef)const;
-	bool operator!=(const Window& LeftRef)const;
 	
 };
 
@@ -81,7 +79,14 @@ public:
 	HICON GetWindowSmallIcon(void)const;
 	DialogWindow& operator=(const DialogWindow& LeftRef);
 	DialogWindow& operator=(DialogWindow&& RightRef);
-	bool operator==(const DialogWindow& LeftRef)const;
-	bool operator!=(const DialogWindow& LeftRef)const;
 
 };
+
+bool operator==(const Window& Left,const Window& Right);
+bool operator==(const Window& Left,const HWND& Right);
+bool operator!=(const Window& Left,const Window& Right);
+bool operator!=(const Window& Left,const HWND& Right);
+bool operator==(const DialogWindow& Left,const DialogWindow& Right);
+bool operator==(const DialogWindow& Left,const HWND& Right);
+bool operator!=(const DialogWindow& Left,const DialogWindow& Right);
+bool operator!=(const DialogWindow& Left,const HWND& Right);

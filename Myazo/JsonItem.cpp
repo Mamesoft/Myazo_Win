@@ -183,19 +183,7 @@ namespace Json
 		else throw std::exception();
 	}
 
-	const long long& Item::Int(void)const
-	{
-		if(Int_Value) return *Int_Value;
-		else throw std::exception();
-	}
-
 	double& Item::Double(void)
-	{
-		if(Double_Value) return *Double_Value;
-		else throw std::exception();
-	}
-
-	const double& Item::Double(void)const
 	{
 		if(Double_Value) return *Double_Value;
 		else throw std::exception();
@@ -207,19 +195,7 @@ namespace Json
 		else throw std::exception();
 	}
 
-	const bool& Item::Bool(void)const
-	{
-		if(Bool_Value) return *Bool_Value;
-		else throw std::exception();
-	}
-
 	JsonString& Item::String(void)
-	{
-		if(String_Value) return *String_Value;
-		else throw std::exception();
-	}
-
-	const JsonString& Item::String(void)const
 	{
 		if(String_Value) return *String_Value;
 		else throw std::exception();
@@ -231,15 +207,39 @@ namespace Json
 		else throw std::exception();
 	}
 
-	const JsonHash& Item::Hash(void)const
-	{
-		if(Hash_Value) return *Hash_Value;
-		else throw std::exception();
-	}
-
 	JsonArray& Item::Array(void)
 	{
 		if(Array_Value) return *Array_Value;
+		else throw std::exception();
+	}
+
+	const long long& Item::Int(void)const
+	{
+		if(Int_Value) return *Int_Value;
+		else throw std::exception();
+	}
+
+	const double& Item::Double(void)const
+	{
+		if(Double_Value) return *Double_Value;
+		else throw std::exception();
+	}
+
+	const bool& Item::Bool(void)const
+	{
+		if(Bool_Value) return *Bool_Value;
+		else throw std::exception();
+	}
+
+	const JsonString& Item::String(void)const
+	{
+		if(String_Value) return *String_Value;
+		else throw std::exception();
+	}
+
+	const JsonHash& Item::Hash(void)const
+	{
+		if(Hash_Value) return *Hash_Value;
 		else throw std::exception();
 	}
 
@@ -303,31 +303,31 @@ namespace Json
 		return *this;
 	}
 
-	bool Item::operator==(const Item& LeftRef)const
+	bool operator==(const Item& Left,const Item& Right)
 	{
-		if(Type()!=LeftRef.Type()) return false;
-		switch(Type()){
+		if(Left.Type()!=Right.Type()) return false;
+		switch(Left.Type()){
 		case Type::Null:
 			return true;
 		case Type::Int:
-			return Int()==LeftRef.Int();
+			return Left.Int()==Right.Int();
 		case Type::Double:
-			return Double()==LeftRef.Double();
+			return Left.Double()==Right.Double();
 		case Type::Bool:
-			return Bool()==LeftRef.Bool();
+			return Left.Bool()==Right.Bool();
 		case Type::String:
-			return String()==LeftRef.String();
+			return Left.String()==Right.String();
 		case Type::Hash:
-			return Hash()==LeftRef.Hash();
+			return Left.Hash()==Right.Hash();
 		case Type::Array:
-			return Array()==LeftRef.Array();
+			return Left.Array()==Right.Array();
 		}
 		throw std::exception();
 	}
 
-	bool Item::operator!=(const Item& LeftRef)const
+	bool operator!=(const Item& Left,const Item& Right)
 	{
-		return !operator==(LeftRef);
+		return !(Left==Right);
 	}
 
 }

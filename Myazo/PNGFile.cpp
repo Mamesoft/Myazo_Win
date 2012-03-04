@@ -34,15 +34,19 @@ bool PNGFile::IsWellHeader(std::wstring FileName)
 	return Header==WellHeader?true:false;
 }
 
-bool PNGFile::Save(Gdiplus::Bitmap& InputImage,std::wstring FileName)
+bool PNGFile::Save(Gdiplus::Bitmap* InputBitmap,std::wstring FileName)
 {
-	if(InputImage.Save(FileName.c_str(),&PNGEncoderClassID)!=Gdiplus::Status::Ok) return false;
-	return true;
+	return InputBitmap->Save(FileName.c_str(),&PNGEncoderClassID)==Gdiplus::Status::Ok?true:false;
+}
+
+bool PNGFile::Save(HBITMAP BitmapHandle,std::wstring FileName,HPALETTE Palette)
+{
+	Gdiplus::Bitmap InputBitmap(BitmapHandle,Palette);
+	return InputBitmap.Save(FileName.c_str(),&PNGEncoderClassID)==Gdiplus::Status::Ok?true:false;
 }
 
 bool PNGFile::ConvertToPNG(std::wstring InputFileName,std::wstring OutputFileName)
 {
-	Gdiplus::Bitmap InputImage(InputFileName.c_str());
-	if(InputImage.Save(OutputFileName.c_str(),&PNGEncoderClassID)!=Gdiplus::Status::Ok) return false;
-	return true;
+	Gdiplus::Bitmap InputBitmap(InputFileName.c_str());
+	return InputBitmap.Save(OutputFileName.c_str(),&PNGEncoderClassID)==Gdiplus::Status::Ok?true:false;
 }
