@@ -22,6 +22,7 @@ LRESULT __stdcall Myazo::WndProc(HWND WindowHandle,unsigned int Message,WPARAM W
 		if(WParam==100) Program.ProcessKeyMessage();
 		break;
 	case WM_DESTROY:
+		PostQuitMessage(0);
 		break;
 	default:
 		return DefWindowProc(WindowHandle,Message,WParam,LParam);
@@ -33,8 +34,12 @@ LRESULT __stdcall Myazo::LayerWndProc(HWND WindowHandle,unsigned int Message,WPA
 {
 	Myazo& Program=GetInstance();
 	switch(Message){
-	case WM_ERASEBKGND:
-		return Program.DrawLayerWindowContent();
+	case WM_PAINT:
+		PAINTSTRUCT PaintStruct;
+		BeginPaint(WindowHandle,&PaintStruct);
+		Program.DrawLayerWindowContent();
+		EndPaint(WindowHandle,&PaintStruct);
+		break;
 	default:
 		return DefWindowProc(WindowHandle,Message,WParam,LParam);
 	}
@@ -75,23 +80,21 @@ void Myazo::MoveLayerWindow(void)
 	return;
 }
 
-bool Myazo::DrawLayerWindowContent(void)
+void Myazo::DrawLayerWindowContent(void)
 {
-	std::shared_ptr<Gdiplus::StringFormat> Layout(new Gdiplus::StringFormat());
+	std::shared_ptr<Gdiplus::Graphics> LayerWindowGraphics(new Gdiplus::Graphics(LayerWindow.GetWindowHandle()));
+	std::shared_ptr<Gdiplus::StringFormat> Layout(new Gdiplus::StringFormat(Gdiplus::StringFormatFlagsNoWrap));
 	std::shared_ptr<Gdiplus::SolidBrush> BlackBrush(new Gdiplus::SolidBrush(Gdiplus::Color::Black)),WhiteBrush(new Gdiplus::SolidBrush(Gdiplus::Color::White));
 	Layout->SetAlignment(Gdiplus::StringAlignment::StringAlignmentFar);
 	Layout->SetLineAlignment(Gdiplus::StringAlignment::StringAlignmentFar);
-	auto LayoutRect=Gdiplus::RectF(
-		CaptureRect.left<CaptureRect.right?CaptureRect.left:CaptureRect.right,
-		CaptureRect.top<CaptureRect.bottom?CaptureRect.top:CaptureRect.bottom,
-		std::abs(CaptureRect.right-CaptureRect.left)-10,
-		std::abs(CaptureRect.bottom-CaptureRect.top)-10);
-	LayerWindowGraphics->Clear(Gdiplus::Color(100,100,100));
-	LayerWindowGraphics->DrawString(L"",0,&*LayerWindowFont,LayoutRect,&*Layout,&*BlackBrush);
-	LayoutRect.Width--;
-	LayoutRect.Height--;
-	LayerWindowGraphics->DrawString(L"",0,&*LayerWindowFont,LayoutRect,&*Layout,&*WhiteBrush);
-	return true;
+	Layout->SetTrimming(Gdiplus::StringTrimmingNone);
+	RECT ClientRect;
+	GetClientRect(LayerWindow.GetWindowHandle(),&ClientRect);
+	auto LayoutRect=Gdiplus::RectF(ClientRect.left,ClientRect.top,ClientRect.right-5,ClientRect.bottom-5);
+	LayerWindowGraphics->DrawString(L"テスト\nスト",6,&*LayerWindowFont,LayoutRect,&*Layout,&*BlackBrush);
+	LayoutRect.Inflate(-1,-1);
+	LayerWindowGraphics->DrawString(L"テスト\nスト",6,&*LayerWindowFont,LayoutRect,&*Layout,&*WhiteBrush);
+	return;
 }
 
 void Myazo::StartCapture(int X,int Y)

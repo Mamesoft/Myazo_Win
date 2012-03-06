@@ -313,8 +313,9 @@ DialogWindow::DialogWindow(std::wstring ClassName,WNDPROC Proc,HICON Icon,HICON 
 DialogWindow::DialogWindow(const WNDCLASSEX& WindowClass)
 {
 	Init();
-	*this->WindowClass=WindowClass;
-	if(this->WindowClass->lpszClassName) WindowClassName=WindowClass.lpszClassName;
+	WindowClassName=WindowClass.lpszClassName;
+	std::memcpy(&*this->WindowClass,&WindowClass,sizeof(WindowClass));
+	this->WindowClass->lpszClassName=WindowClassName.c_str();
 	return;
 }
 
@@ -350,7 +351,7 @@ void DialogWindow::Init(void)
 
 bool DialogWindow::Register(void)
 {
-	return !*ClassAtom&&(*ClassAtom=RegisterClassEx(WindowClass.get()))&&!*ClassAtom?true:false;
+	return !*ClassAtom&&(*ClassAtom=RegisterClassEx(WindowClass.get()))&&*ClassAtom?true:false;
 }
 
 bool DialogWindow::Unregister(void)

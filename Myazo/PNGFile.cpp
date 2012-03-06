@@ -12,9 +12,9 @@ bool PNGFile::Init(void)
 	std::wstring TargetMimeType=L"image/png";
 	unsigned Size,EncoderCount;
 	Gdiplus::GetImageEncodersSize(&EncoderCount,&Size);
-	auto Codecs=std::vector<Gdiplus::ImageCodecInfo>(EncoderCount);
-	Gdiplus::GetImageEncoders(EncoderCount,Size,Codecs.data());
-	auto Codec=std::find_if(Codecs.begin(),Codecs.end(),
+	auto Codecs=std::vector<unsigned char>(Size);
+	Gdiplus::GetImageEncoders(EncoderCount,Size,(Gdiplus::ImageCodecInfo*)Codecs.data());
+	auto Codec=std::find_if((Gdiplus::ImageCodecInfo*)Codecs.data(),(Gdiplus::ImageCodecInfo*)Codecs.data()+EncoderCount,
 		[&](Gdiplus::ImageCodecInfo& Obj){return !TargetMimeType.compare(Obj.MimeType)?true:false;});
 	PNGEncoderClassID=(*Codec).Clsid;
 	return true;

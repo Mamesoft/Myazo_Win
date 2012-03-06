@@ -11,7 +11,6 @@ private:
 	PNGFile ImageEncoder;
 	DialogWindow MainWindow,LayerWindow,AuthWindow;
 	RECT CaptureRect;
-	std::shared_ptr<Gdiplus::Graphics> LayerWindowGraphics;
 	std::shared_ptr<Gdiplus::Font> LayerWindowFont;
 	const std::wstring TempFileNamePrefix;
 
@@ -23,7 +22,7 @@ private:
 	bool InitWindow(void);
 	void ProcessKeyMessage(void);
 	void MoveLayerWindow(void);
-	bool DrawLayerWindowContent(void);
+	void DrawLayerWindowContent(void);
 	void StartCapture(int X,int Y);
 	void UpdatePosition(int X,int Y);
 	void EndCapture(int X, int Y);
