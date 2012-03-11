@@ -6,7 +6,7 @@ namespace Json
 	{
 		auto Start=Char;
 		for(;;Char++) if(*Char==L' '||*Char==L'\t'||*Char==L'\n'||*Char==L'\r'||*Char==L','||*Char==L'}'||*Char==L']') break;
-		std::wstring BoolString(Start,Char);
+		std::wstring BoolString(Start,Char--);
 		if(!BoolString.compare(L"true")) return true;
 		else if(!BoolString.compare(L"false")) return false;
 		throw std::exception();
@@ -16,20 +16,22 @@ namespace Json
 	{
 		auto Start=++Char;
 		std::wistringstream Converter;
+		Converter.setf(std::ios_base::hex,std::ios_base::basefield);;
 		for(;;Char++) if(*Char==L'"'&&*(Char-1)!=L'\\') break;
 		std::wstring TempString(Start,Char),String;
 		String.reserve(TempString.length());
 		for(auto Position=TempString.cbegin();Position!=TempString.cend();Position++){
 			if(*Position==L'\\'){
-				auto Char=*++Position;
+				Position++;
+				auto Char=*Position;
 				String.push_back(
 					Char==L'u'?
 						[&](void)->wchar_t
 						{
 							Position+=4;
-							Converter.str(std::wstring(Position-4,Position));
+							Converter.str(std::wstring(Position-3,Position+1));
 							int Char;
-							return Converter>>Char,(wchar_t)Char;
+							return Converter>>Char,Converter.clear(),(wchar_t)Char;
 						}():
 					Char==L'\"'?L'\"':
 					Char==L'\\'?L'\\':
@@ -48,7 +50,7 @@ namespace Json
 	{
 		auto Start=Char;
 		for(;;Char++) if(*Char==L' '||*Char==L'\t'||*Char==L'\n'||*Char==L'\r'||*Char==L','||*Char==L'}'||*Char==L']') break;
-		std::wstring NullString(Start,Char);
+		std::wstring NullString(Start,Char--);
 		if(!NullString.compare(L"null")) return true;
 		else return false;
 	}
@@ -57,25 +59,25 @@ namespace Json
 	{
 		std::wstring EscapeString;
 		std::wostringstream Converter;
-		Converter<<std::ios_base::hex;
+		Converter.setf(std::ios_base::hex,std::ios_base::basefield);
 		EscapeString.reserve(String.length()*2);
 		for(auto Position=String.cbegin();Position!=String.cend();Position++){
-				auto Char=*Position;
-				EscapeString+=
-					Char==L'\"'?L"\\\"":
-					Char==L'\\'?L"\\\\":
-					Char==L'/'?L"\\/":
-					Char==L'\b'?L"\\b":
-					Char==L'\f'?L"\\f":
-					Char==L'\n'?L"\\n":
-					Char==L'\r'?L"\\r":
-					Char==L'\t'?L"\\t":
-					Char<=L'\x007f'?EscapeString.push_back(Char),L"":
-					[&](void)->const wchar_t*
-					{
-						Converter.str(std::wstring());
-						return Converter<<L"\\u"<<(int)Char,Converter.str().c_str();
-					}();
+			auto Char=*Position;
+			EscapeString+=
+				Char==L'\"'?L"\\\"":
+				Char==L'\\'?L"\\\\":
+				Char==L'/'?L"\\/":
+				Char==L'\b'?L"\\b":
+				Char==L'\f'?L"\\f":
+				Char==L'\n'?L"\\n":
+				Char==L'\r'?L"\\r":
+				Char==L'\t'?L"\\t":
+				Char<=L'\x007f'?EscapeString.push_back(Char),L"":
+				[&](void)->const wchar_t*
+				{
+					Converter.str(std::wstring());
+					return Converter<<L"\\u"<<(int)Char,Converter.clear(),Converter.str().c_str();
+				}();
 		}
 		return EscapeString;
 	}
@@ -227,12 +229,12 @@ namespace Json
 					for(;;Char++) if(*Char==L' '||*Char==L'\t'||*Char==L'\n'||*Char==L'\r'||*Char==L','||*Char==L'}'||*Char==L']') break;
 					if(std::regex_match(Start,Char,std::wregex(L"-?\\d+"))){
 						Item& Obj=Item(Type::Int);
-						Converter.str(std::wstring(Start,Char));
+						Converter.str(std::wstring(Start,Char--));
 						Converter>>Obj.Int();
 						Level.top().Hash().insert(std::make_pair(Key,Obj));
 					}else if(std::regex_match(Start,Char,std::wregex(L"-?\\d+\\.\\d+([eE][+-]\\d+)?"))){
 						Item& Obj=Item(Type::Double);
-						Converter.str(std::wstring(Start,Char));
+						Converter.str(std::wstring(Start,Char--));
 						Converter>>Obj.Double();
 						Level.top().Hash().insert(std::make_pair(Key,Obj));
 					}else throw std::exception("数字以外の文字が入っている、または不正な数値形式の文字列です。\nJSONの数値文字列は10進数で記述しなければなりません。");

@@ -12,7 +12,9 @@ private:
 	DialogWindow MainWindow,LayerWindow,AuthWindow;
 	RECT CaptureRect;
 	std::shared_ptr<Gdiplus::Font> LayerWindowFont;
-	const std::wstring TempFileNamePrefix;
+	const std::wstring AppName,UserAgent,UploadDomain,UploadScriptPath,TempFileNamePrefix;
+	std::wstring UserID,PassWord;
+	Json::Parser JsonParser;
 
 	Myazo(const Myazo&);
 	Myazo(void);
@@ -26,8 +28,12 @@ private:
 	void StartCapture(int X,int Y);
 	void UpdatePosition(int X,int Y);
 	void EndCapture(int X, int Y);
-	void GetScreenShot(void);
-	bool Upload(void);
+	std::shared_ptr<IStream> GetScreenShot(void);
+	std::string CreateMessage(std::shared_ptr<IStream>& ImageFileStream);
+	std::wstring Upload(const std::string& Message);
+	void OpenUrl(const std::wstring& Url);
+	bool IsImageFile(const std::wstring& FileName);
+	int UploadImageFile(const std::wstring& FileName);
 	Myazo& operator=(const Myazo&);
 	Myazo& operator=(Myazo&&);
 

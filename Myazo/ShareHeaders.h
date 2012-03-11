@@ -4,6 +4,7 @@
 #define _WIN32_WINNT 0x0501
 #define _WIN32_WINDOWS 0x0501
 //#define _WIN32_IE 0x0600 //IE”š”­‚µ‚ë
+#define _CRT_SECURE_NO_WARNINGS
 #include <string>
 #include <memory>
 #include <fstream>
@@ -15,6 +16,8 @@
 #include <regex>
 #include <functional>
 #include <array>
+#include <random>
+#include <iomanip>
 
 #include <cstring>
 #include <ctime>
@@ -26,6 +29,7 @@
 #include <GdiPlus.h>
 #include <WinInet.h> 
 #include <CommCtrl.h>
+#include <ObjIdl.h>
 
 #include "resource.h"
 

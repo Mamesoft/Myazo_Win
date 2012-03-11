@@ -28,10 +28,21 @@ CLSID PNGFile::GetPNGEncoderClassID(void)
 bool PNGFile::IsWellHeader(std::wstring FileName)
 {
 	std::array<unsigned char,8> WellHeader={0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A},Header;
-	std::wifstream File(FileName,std::ios_base::in|std::ios_base::binary);
-	File.read((wchar_t*)Header.data(),sizeof(Header[0])*Header.size());
+	std::ifstream File(FileName,std::ios_base::in|std::ios_base::binary);
+	File.read((char*)Header.data(),Header.size());
 	File.close();
-	return Header==WellHeader?true:false;
+	return Header==WellHeader;
+}
+
+bool PNGFile::IsWellHeader(IStream* Stream)
+{
+	std::array<unsigned char,8> WellHeader={0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A},Header;
+	unsigned long WrittenSize;
+	LARGE_INTEGER Position;
+	Position.QuadPart=0;
+	Stream->Seek(Position,STREAM_SEEK_SET,nullptr);
+	Stream->Read(Header.data(),8,&WrittenSize);
+	return Header==WellHeader;
 }
 
 bool PNGFile::Save(Gdiplus::Bitmap* InputBitmap,std::wstring FileName)
@@ -39,10 +50,21 @@ bool PNGFile::Save(Gdiplus::Bitmap* InputBitmap,std::wstring FileName)
 	return InputBitmap->Save(FileName.c_str(),&PNGEncoderClassID)==Gdiplus::Status::Ok?true:false;
 }
 
+bool PNGFile::Save(Gdiplus::Bitmap* InputBitmap,IStream* Stream)
+{
+	return InputBitmap->Save(Stream,&PNGEncoderClassID)==Gdiplus::Status::Ok?true:false;
+}
+
 bool PNGFile::Save(HBITMAP BitmapHandle,std::wstring FileName,HPALETTE Palette)
 {
 	Gdiplus::Bitmap InputBitmap(BitmapHandle,Palette);
 	return InputBitmap.Save(FileName.c_str(),&PNGEncoderClassID)==Gdiplus::Status::Ok?true:false;
+}
+
+bool PNGFile::Save(HBITMAP BitmapHandle,IStream* Stream,HPALETTE Palette)
+{
+	Gdiplus::Bitmap InputBitmap(BitmapHandle,Palette);
+	return InputBitmap.Save(Stream,&PNGEncoderClassID)==Gdiplus::Status::Ok?true:false;
 }
 
 bool PNGFile::ConvertToPNG(std::wstring InputFileName,std::wstring OutputFileName)

@@ -96,7 +96,31 @@ namespace Json
 		return;
 	}
 
+	Item::Item(const unsigned long long& Int):Int_Value(new long long(Int))
+	{
+		Type_Value=Type::Int;
+		return;
+	}
+
+	Item::Item(const int& Int):Int_Value(new long long(Int))
+	{
+		Type_Value=Type::Int;
+		return;
+	}
+
+	Item::Item(const unsigned int& Int):Int_Value(new long long(Int))
+	{
+		Type_Value=Type::Int;
+		return;
+	}
+
 	Item::Item(const double& Double):Double_Value(new double(Double))
+	{
+		Type_Value=Type::Double;
+		return;
+	}
+
+	Item::Item(const float& Float):Double_Value(new double(Float))
 	{
 		Type_Value=Type::Double;
 		return;
@@ -132,7 +156,31 @@ namespace Json
 		return;
 	}
 
+	Item::Item(unsigned long long&& Int):Int_Value(new long long(std::move(Int)))
+	{
+		Type_Value=Type::Int;
+		return;
+	}
+
+	Item::Item(int&& Int):Int_Value(new long long(std::move(Int)))
+	{
+		Type_Value=Type::Int;
+		return;
+	}
+
+	Item::Item(unsigned int&& Int):Int_Value(new long long(std::move(Int)))
+	{
+		Type_Value=Type::Int;
+		return;
+	}
+
 	Item::Item(double&& Double):Double_Value(new double(std::move(Double)))
+	{
+		Type_Value=Type::Double;
+		return;
+	}
+
+	Item::Item(float&& Float):Double_Value(new double(std::move(Float)))
 	{
 		Type_Value=Type::Double;
 		return;
@@ -301,6 +349,156 @@ namespace Json
 		}
 		IsNull_Value=Type_Value==Type::Null?true:false;
 		return *this;
+	}
+
+	Item::operator long long(void)
+	{
+		if(Type_Value==Type::Int) return *Int_Value;
+		else throw std::exception();
+	}
+
+	Item::operator unsigned long long(void)
+	{
+		if(Type_Value==Type::Int) return *Int_Value;
+		else throw std::exception();
+	}
+
+	Item::operator int(void)
+	{
+		if(Type_Value==Type::Int) return *Int_Value;
+		else throw std::exception();
+	}
+
+	Item::operator unsigned int(void)
+	{
+		if(Type_Value==Type::Int) return *Int_Value;
+		else throw std::exception();
+	}
+
+	Item::operator double(void)
+	{
+		if(Type_Value==Type::Double) return *Double_Value;
+		else throw std::exception();
+	}
+
+	Item::operator bool(void)
+	{
+		if(Type_Value==Type::Bool) return *Bool_Value;
+		else throw std::exception();
+	}
+
+	Item::operator JsonString(void)
+	{
+		if(Type_Value==Type::String) return *String_Value;
+		else throw std::exception();
+	}
+
+	Item::operator JsonHash(void)
+	{
+		if(Type_Value=Type::Hash) return *Hash_Value;
+		else throw std::exception();
+	}
+
+	Item::operator JsonArray(void)
+	{
+		if(Type_Value==Type::Array) return *Array_Value;
+		else throw std::exception();
+	}
+
+	Item::operator const long long(void)const
+	{
+		if(Type_Value==Type::Int) return *Int_Value;
+		else throw std::exception();
+	}
+
+	Item::operator const unsigned long long(void)const
+	{
+		if(Type_Value==Type::Int) return *Int_Value;
+		else throw std::exception();
+	}
+
+	Item::operator const int(void)const
+	{
+		if(Type_Value==Type::Int) return *Int_Value;
+		else throw std::exception();
+	}
+
+	Item::operator const unsigned int(void)const
+	{
+		if(Type_Value==Type::Int) return *Int_Value;
+		else throw std::exception();
+	}
+
+	Item::operator const double(void)const
+	{
+		if(Type_Value==Type::Double) return *Double_Value;
+		else throw std::exception();
+	}
+
+	Item::operator const float(void)const
+	{
+		if(Type_Value==Type::Double) return *Double_Value;
+		else throw std::exception();
+	}
+
+	Item::operator const bool(void)const
+	{
+		if(Type_Value==Type::Bool) return *Bool_Value;
+		else throw std::exception();
+	}
+
+	Item::operator const Json::JsonString(void)const
+	{
+		if(Type_Value==Type::String) return *String_Value;
+		else throw std::exception();
+	}
+
+	Item::operator const JsonHash(void)const
+	{
+		if(Type_Value==Type::Hash) return *Hash_Value;
+		else throw std::exception();
+	}
+
+	Item::operator const JsonArray(void)const
+	{
+		if(Type_Value==Type::Array) return *Array_Value;
+		else throw std::exception();
+	}
+
+	Item& Item::operator()(const std::wstring& Key)
+	{
+		if(Type_Value==Type::Hash) return Hash_Value->at(Key);
+		else throw std::exception();
+	}
+
+	Item& Item::operator()(const wchar_t*& Key)
+	{
+		if(Type_Value==Type::Hash) return Hash_Value->at(Key);
+		else throw std::exception();
+	}
+
+	Item& Item::operator()(const int& Index)
+	{
+		if(Type_Value==Type::Array) return Array_Value->at(Index);
+		else throw std::exception();
+	}
+
+	const Item& Item::operator()(const std::wstring& Key)const
+	{
+		if(Type_Value==Type::Hash) return Hash_Value->at(Key);
+		else throw std::exception();
+	}
+
+	const Item& Item::operator()(const wchar_t*& Key)const
+	{
+		if(Type_Value==Type::Hash) return Hash_Value->at(Key);
+		else throw std::exception();
+	}
+
+	const Item& Item::operator()(const int& Index)const
+	{
+		if(Type_Value==Type::Array) return Array_Value->at(Index);
+		else throw std::exception();
 	}
 
 	bool operator==(const Item& Left,const Item& Right)

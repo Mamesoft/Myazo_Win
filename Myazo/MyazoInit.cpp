@@ -5,7 +5,7 @@ Myazo::Myazo(const Myazo&)
 	return;
 }
 
-Myazo::Myazo(void):TempFileNamePrefix(L"myazo")
+Myazo::Myazo(void):AppName(L"Myazo"),UserAgent(L"Myazo_win/0.00"),UploadDomain(L"myazo.net"),UploadScriptPath(L"upload.php"),TempFileNamePrefix(L"myazo")
 {
 	Instance=nullptr;
 	UploadAsPrivate=UtilityMode=CaptureStarted=false;
@@ -41,15 +41,17 @@ bool Myazo::Init(void)
 	int X,Y,Width,Height;
 	Instance=GetModuleHandle(nullptr);
 	if(!ImageEncoder.Init()) return false;
+	if(__argc==2) ExitProcess(PathFileExists(__wargv[1])&&IsImageFile(__wargv[1])?UploadImageFile(__wargv[1]):
+		(MessageBox(nullptr,L"指定されたファイルが存在しない、または画像ファイルではありません。",AppName.c_str(),MB_OK|MB_ICONERROR),1));
 	X=GetSystemMetrics(SM_XVIRTUALSCREEN);
 	Y=GetSystemMetrics(SM_YVIRTUALSCREEN);
 	Width=GetSystemMetrics(SM_CXVIRTUALSCREEN);
 	Height=GetSystemMetrics(SM_CYVIRTUALSCREEN);
 	if(!InitWindow()) return false;
-	if(!MainWindow.Create(L"",WS_POPUP,WS_EX_TRANSPARENT|WS_EX_TOOLWINDOW|WS_EX_TOPMOST|WS_EX_NOACTIVATE,0,0,0,0)) return false;
+	if(!MainWindow.Create(AppName.c_str(),WS_POPUP,WS_EX_TRANSPARENT|WS_EX_TOOLWINDOW|WS_EX_TOPMOST|WS_EX_NOACTIVATE,0,0,0,0)) return false;
 	MainWindow.Move(X,Y,Width,Height,false);
 	MainWindow.ShowAndUpdate(SW_SHOW);
-	if(!LayerWindow.Create(L"Myazo",WS_POPUP,WS_EX_TOOLWINDOW|WS_EX_LAYERED|WS_EX_TOPMOST|WS_EX_NOACTIVATE,100,100,300,300)) return false;
+	if(!LayerWindow.Create(AppName.c_str(),WS_POPUP,WS_EX_TOOLWINDOW|WS_EX_LAYERED|WS_EX_TOPMOST|WS_EX_NOACTIVATE,100,100,300,300)) return false;
 	SetLayeredWindowAttributes(LayerWindow.GetWindowHandle(),RGB(255,0,0),100,LWA_COLORKEY|LWA_ALPHA);
 	SetTimer(MainWindow.GetWindowHandle(),100,100,nullptr);
 	LayerWindowFont.reset(new Gdiplus::Font(L"Tahoma",8));
