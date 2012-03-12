@@ -16,7 +16,7 @@ namespace Json
 	{
 		auto Start=++Char;
 		std::wistringstream Converter;
-		Converter.setf(std::ios_base::hex,std::ios_base::basefield);;
+		Converter.setf(std::ios::hex,std::ios::basefield);
 		for(;;Char++) if(*Char==L'"'&&*(Char-1)!=L'\\') break;
 		std::wstring TempString(Start,Char),String;
 		String.reserve(TempString.length());
@@ -59,8 +59,9 @@ namespace Json
 	{
 		std::wstring EscapeString;
 		std::wostringstream Converter;
-		Converter.setf(std::ios_base::hex,std::ios_base::basefield);
+		Converter.setf(std::ios::hex,std::ios::basefield);
 		EscapeString.reserve(String.length()*2);
+		EscapeString+=L"\"";
 		for(auto Position=String.cbegin();Position!=String.cend();Position++){
 			auto Char=*Position;
 			EscapeString+=
@@ -79,6 +80,7 @@ namespace Json
 					return Converter<<L"\\u"<<(int)Char,Converter.clear(),Converter.str().c_str();
 				}();
 		}
+		EscapeString+=L"\"";
 		return EscapeString;
 	}
 

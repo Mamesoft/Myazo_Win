@@ -8,15 +8,10 @@ LRESULT __stdcall Myazo::WndProc(HWND WindowHandle,unsigned int Message,WPARAM W
 		Program.StartCapture(LOWORD(LParam),HIWORD(LParam));
 		break;
 	case WM_LBUTTONUP:
-		{
-			Program.EndCapture(LOWORD(LParam),HIWORD(LParam));
-			auto ResultString=Program.Upload(Program.CreateMessage(Program.GetScreenShot()));
-			if(std::regex_match(ResultString,std::wregex(L"http://myazo.net/(./)?[0-9a-f]{32}\\.png"))) Program.OpenUrl(ResultString);
-			else MessageBox(nullptr,ResultString.c_str(),Program.AppName.c_str(),MB_OK|MB_ICONERROR);
-		}
+		Program.EndCapture(LOWORD(LParam),HIWORD(LParam));
 	case WM_RBUTTONDOWN:
-		Program.LayerWindow.Destroy();
 		Program.MainWindow.Destroy();
+		Program.LayerWindow.Destroy();
 		return DefWindowProc(WindowHandle,Message,WParam,LParam);
 	case WM_MOUSEMOVE:
 		if(Program.CaptureStarted) Program.UpdatePosition(LOWORD(LParam),HIWORD(LParam));
@@ -75,6 +70,68 @@ void Myazo::ProcessKeyMessage(void)
 	return;
 }
 
+void Myazo::Encrypt(std::vector<wchar_t>& Data)
+{
+	const unsigned Size=Data.size();
+	for(unsigned i=0;i<Size;i++)
+		if(!(i%2)) Data[i]=~(Data[i]+Size-i);
+		else Data[i]=~(Data[i]+i);
+	return;
+}
+
+void Myazo::Decrypt(std::vector<wchar_t>& Data)
+{
+	const unsigned Size=Data.size();
+	for(unsigned i=0;i<Size;i++)
+		if(!(i%2)) Data[i]=~Data[i]-Size+i;
+		else Data[i]=~Data[i]-i;
+	return;
+}
+
+std::wstring Myazo::ReadSettingFile(void)
+{
+	const wchar_t* EmptySettingString=L"{\"userid\":\"\",\"password\":\"\"}";
+	const auto& Path=SettingDirectory+(*--SettingDirectory.end()==L'\\'?L"":L"\\")+SettingFileName;
+	if(PathIsDirectory(SettingDirectory.c_str())&&PathFileExists(Path.c_str())){
+		std::ifstream SettingFile(Path,std::ios::in|std::ios::binary);
+		SettingFile.seekg(0,std::ios::end);
+		int Size=SettingFile.tellg();
+		SettingFile.clear();
+		Size=(Size-SettingFile.seekg(0,std::ios::beg).tellg())/2;
+		if(Size<2) return EmptySettingString;
+		std::vector<wchar_t> Data(Size,0);
+		SettingFile.read((char*)Data.data(),sizeof(wchar_t)*Data.size());
+		SettingFile.close();
+		Decrypt(Data);
+		return std::wstring(Data.data(),Data.size());
+	}else{
+		CreateDirectory(SettingDirectory.c_str(),nullptr);
+		return EmptySettingString;
+	}
+}
+
+void Myazo::WriteSettingFile(const std::wstring& FileContent)
+{
+	std::ofstream SettingFile(SettingDirectory+(*--SettingDirectory.end()==L'\\'?L"":L"\\")+SettingFileName,
+		std::ios::out|std::ios::binary|std::ios::trunc);
+	std::vector<wchar_t> Data(FileContent.length(),0);
+	std::memcpy(Data.data(),FileContent.c_str(),sizeof(wchar_t)*FileContent.length());
+	Encrypt(Data);
+	SettingFile.write((char*)Data.data(),sizeof(wchar_t)*FileContent.length());
+	return;
+}
+
+std::wstring Myazo::Authenticate(const std::wstring& UserID,const std::wstring& PassWord)
+{
+	std::ostringstream Message;
+	std::string Boundary=ToMultiByte(this->Boundary),NewLine="\r\n",Template="--"+Boundary+NewLine+"Content-Disposition: form-data; name=";
+	Message<<Template<<"\"id\""<<NewLine<<NewLine<<ToMultiByte(UserID)<<NewLine;
+	Message<<Template<<"\"pass\""<<NewLine<<NewLine<<ToMultiByte(PassWord)<<NewLine;
+	Message<<"--"<<Boundary<<"--"<<NewLine;
+	auto Result=JsonParser.Parse(Upload(Message.str(),DefaultHeader,UploadDomain,L"auth.php"));
+	return !Result(L"error")?std::wstring(L""):Result(L"errormessage");
+}
+
 void Myazo::MoveLayerWindow(void)
 {
 	LayerWindow.Move(CaptureRect.left<CaptureRect.right?CaptureRect.left:CaptureRect.right,
@@ -94,7 +151,7 @@ void Myazo::DrawLayerWindowContent(void)
 	RECT ClientRect;
 	GetClientRect(LayerWindow.GetWindowHandle(),&ClientRect);
 	Gdiplus::RectF LayoutRect(ClientRect.left,ClientRect.top,ClientRect.right-5,ClientRect.bottom-5);
-	std::vector<wchar_t> WindowSize(64);
+	std::vector<wchar_t> WindowSize(64,0);
 	_itow(ClientRect.right,WindowSize.data(),10);
 	auto Null=std::find(WindowSize.begin(),WindowSize.end(),0);
 	*Null++=L'\n';
@@ -130,7 +187,11 @@ void Myazo::EndCapture(int X,int Y)
 	ReleaseCapture();
 	CaptureRect.right=X;
 	CaptureRect.bottom=Y;
+	MainWindow.Show(SW_HIDE);
 	LayerWindow.Show(SW_HIDE);
+	auto Result=JsonParser.Parse(Upload(CreateMessage(GetScreenShot()),DefaultHeader,UploadDomain,UploadScriptPath));
+	if(!Result(L"error")&&IsValidImageUrl(Result(L"imgurl"))) OpenUrl(Result(L"imgurl"));
+	else MessageBox(nullptr,Result(L"errormessage").String().c_str(),AppName.c_str(),MB_OK|MB_ICONERROR);
 	return;
 }
 
@@ -143,7 +204,6 @@ std::shared_ptr<IStream> Myazo::GetScreenShot(void)
 		Height=std::abs(CaptureRect.bottom-CaptureRect.top)+1;
 	HBITMAP CaptureBitmapHandle=CreateCompatibleBitmap(DesktopDC,Width,Height),PrevBitmapHandle=(HBITMAP)SelectObject(CaptureDC,CaptureBitmapHandle);
 	BitBlt(CaptureDC,0,0,Width,Height,DesktopDC,X,Y,SRCCOPY);
-	MainWindow.Show(SW_HIDE);
 	IStream* Stream;
 	CreateStreamOnHGlobal(nullptr,true,&Stream);
 	std::shared_ptr<IStream> ImageFileStream(Stream,[](IStream* Obj){if(Obj) Obj->Release();});
@@ -157,38 +217,36 @@ std::shared_ptr<IStream> Myazo::GetScreenShot(void)
 
 std::string Myazo::CreateMessage(std::shared_ptr<IStream>& ImageFileStream)
 {
-	std::string Boundary="h-o-g-e-p-i-y-o",NewLine="\r\n";
 	unsigned long WrittenSize;
 	STATSTG State;
 	ImageFileStream->Stat(&State,STATFLAG_NONAME);
-	std::vector<char> ImageFileData(State.cbSize.LowPart),AsciiString(128);
+	std::vector<char> ImageFileData(State.cbSize.LowPart,0);
 	LARGE_INTEGER Position;
 	Position.QuadPart=0;
 	ImageFileStream->Seek(Position,STREAM_SEEK_SET,nullptr);
 	ImageFileStream->Read(ImageFileData.data(),State.cbSize.LowPart,&WrittenSize);
 	std::ostringstream Message;
-	std::string Template="--"+Boundary+NewLine+"Content-Disposition: form-data; name=";
-	std::wcstombs(AsciiString.data(),UploadDomain.c_str(),UploadDomain.length()+1);
-	Message<<Template<<"\"imagedata\"; filename=\""<<AsciiString.data()<<"\""<<NewLine<<"Content-Type: image/png"<<NewLine<<NewLine;
+	std::string Boundary=ToMultiByte(this->Boundary),NewLine="\r\n",Template="--"+Boundary+NewLine+"Content-Disposition: form-data; name=";
+	Message<<Template<<"\"imagedata\"; filename=\""<<ToMultiByte(UploadDomain)<<"\""<<NewLine<<"Content-Type: image/png"<<NewLine<<NewLine;
 	Message.write(ImageFileData.data(),ImageFileData.size())<<NewLine;
-	std::wcstombs(AsciiString.data(),UserID.c_str(),UserID.length()+1);
-	Message<<Template<<"\"id\""<<NewLine<<NewLine<<AsciiString.data()<<NewLine;
-	std::wcstombs(AsciiString.data(),PassWord.c_str(),PassWord.length()+1);
-	Message<<Template<<"\"pass\""<<NewLine<<NewLine<<AsciiString.data()<<NewLine;
-	Message<<Template<<"\"private\""<<NewLine<<NewLine<<(UploadAsPrivate?"true":"false")<<NewLine;
+	if(!UserID.empty()&&!PassWord.empty()){
+		Message<<Template<<"\"id\""<<NewLine<<NewLine<<ToMultiByte(UserID)<<NewLine;
+		Message<<Template<<"\"pass\""<<NewLine<<NewLine<<ToMultiByte(PassWord)<<NewLine;
+		Message<<Template<<"\"private\""<<NewLine<<NewLine<<(UploadAsPrivate?"true":"false")<<NewLine;
+	}
 	Message<<"--"<<Boundary<<"--"<<NewLine;
 	return Message.str();
 }
 
-std::wstring Myazo::Upload(const std::string& Message)
+std::wstring Myazo::Upload(const std::string& Message,const std::wstring& Header,const std::wstring& Domain,const std::wstring& ScriptPath)
 {
-	std::wstring Header=L"Content-Type: multipart/form-data; boundary=h-o-g-e-p-i-y-o";
 	auto DestroyFunction=[](void* Obj){if(Obj) InternetCloseHandle(Obj);};
 	std::shared_ptr<void> SessionHandle,ConnectionHandle,RequestHandle;
 	SessionHandle.reset(InternetOpen(AppName.c_str(),INTERNET_OPEN_TYPE_PRECONFIG,nullptr,nullptr,0),DestroyFunction);
-	ConnectionHandle.reset(InternetConnect(SessionHandle.get(),UploadDomain.c_str(),80,nullptr,nullptr,INTERNET_SERVICE_HTTP,0,0),DestroyFunction);
-	RequestHandle.reset(HttpOpenRequest(ConnectionHandle.get(),L"POST",UploadScriptPath.c_str(),nullptr,nullptr,nullptr,INTERNET_FLAG_NO_CACHE_WRITE,0),DestroyFunction);
-	HttpAddRequestHeaders(RequestHandle.get(),(L"User-Agent: "+UserAgent+L"\r\n").c_str(),std::wcslen(L"User-Agent: Myazo_win/1.00\r\n"),HTTP_ADDREQ_FLAG_ADD|HTTP_ADDREQ_FLAG_REPLACE);
+	ConnectionHandle.reset(InternetConnect(SessionHandle.get(),Domain.c_str(),80,nullptr,nullptr,INTERNET_SERVICE_HTTP,0,0),DestroyFunction);
+	RequestHandle.reset(HttpOpenRequest(ConnectionHandle.get(),L"POST",ScriptPath.c_str(),nullptr,nullptr,nullptr,INTERNET_FLAG_NO_CACHE_WRITE,0),DestroyFunction);
+	auto UserAgentHeader=L"User-Agent: "+UserAgent+L"\r\n";
+	HttpAddRequestHeaders(RequestHandle.get(),UserAgentHeader.c_str(),UserAgentHeader.length(),HTTP_ADDREQ_FLAG_ADD|HTTP_ADDREQ_FLAG_REPLACE);
 	DWORD WrittenSize;
 	INTERNET_BUFFERS Buffer;
 	ZeroMemory(&Buffer,sizeof(Buffer));
@@ -198,13 +256,9 @@ std::wstring Myazo::Upload(const std::string& Message)
 	Buffer.dwHeadersLength=Header.length();
 	if(HttpSendRequestEx(RequestHandle.get(),&Buffer,nullptr,0,0)&&InternetWriteFile(RequestHandle.get(),Message.c_str(),Message.length(),&WrittenSize)){
 		HttpEndRequest(RequestHandle.get(),nullptr,0,0);
-		std::vector<char> Temp;
-		Temp.resize(1024,0);
-		std::vector<wchar_t> TempUnicode(Temp.size());
+		std::vector<char> Temp(1024,0);
 		InternetReadFile(RequestHandle.get(),Temp.data(),Temp.size(),&WrittenSize);
-		std::mbstowcs(TempUnicode.data(),Temp.data(),WrittenSize+1);
-		auto Result=JsonParser.Parse(std::wstring(TempUnicode.data()));
-		return !Result(L"error")?Result(L"imgurl"):Result(L"errormessage");
+		return ToUnicode(Temp);
 	}
 	return L"";
 }
@@ -224,6 +278,11 @@ bool Myazo::IsImageFile(const std::wstring& FileName)
 	return std::regex_match(FileName,std::wregex(L".+\\.(bmp|png|gif|jpg|jpeg|jfif|tif|tiff|ico)",std::regex_constants::ECMAScript|std::regex_constants::icase));
 }
 
+bool Myazo::IsValidImageUrl(const std::wstring& Url)
+{
+	return std::regex_match(Url,std::wregex(L"http://myazo.net/[0-9a-fA-F]{32}\\.png"));
+}
+
 int Myazo::UploadImageFile(const std::wstring& FileName)
 {
 	auto ReleaseFunction=[](IStream* Obj){if(Obj) Obj->Release();};
@@ -240,7 +299,35 @@ int Myazo::UploadImageFile(const std::wstring& FileName)
 		if(!ImageEncoder.Save(&Image,StreamPtr)) return MessageBox(nullptr,L"PNGå`éÆÇ…ïœä∑èoóàÇ‹ÇπÇÒÇ≈ÇµÇΩÅB",AppName.c_str(),MB_OK|MB_ICONERROR),1;
 		ImageFileStream.reset(StreamPtr,ReleaseFunction);
 	}
-	auto ResultString=Upload(CreateMessage(ImageFileStream));
-	return std::regex_match(ResultString,std::wregex(L"http://myazo.net/(./)?[0-9a-f]{32}\\.png"))?OpenUrl(ResultString),0:
-		MessageBox(nullptr,ResultString.c_str(),AppName.c_str(),MB_OK|MB_ICONERROR),1;
+	auto Result=JsonParser.Parse(Upload(CreateMessage(ImageFileStream),DefaultHeader,UploadDomain,UploadScriptPath));
+	return Result(L"error")&&IsValidImageUrl(Result(L"imgurl"))?OpenUrl(Result(L"imgurl")),0:
+		MessageBox(nullptr,Result(L"errormessage").String().c_str(),AppName.c_str(),MB_OK|MB_ICONERROR),1;
+}
+
+std::wstring Myazo::ToUnicode(const std::string& MultiByteString)
+{
+	std::vector<wchar_t> TempBuffer(MultiByteString.length()+1,0);
+	std::mbstowcs(TempBuffer.data(),MultiByteString.c_str(),MultiByteString.length());
+	return std::wstring(TempBuffer.data());
+}
+
+std::wstring Myazo::ToUnicode(const std::vector<char>& MultiByteBuffer)
+{
+	std::vector<wchar_t> TempBuffer(MultiByteBuffer.size(),0);
+	std::mbstowcs(TempBuffer.data(),MultiByteBuffer.data(),MultiByteBuffer.size());
+	return std::wstring(TempBuffer.data());
+}
+
+std::string Myazo::ToMultiByte(const std::wstring& UnicodeString)
+{
+	std::vector<char> TempBuffer(UnicodeString.length()+1,0);
+	std::wcstombs(TempBuffer.data(),UnicodeString.c_str(),UnicodeString.length());
+	return std::string(TempBuffer.data());
+}
+
+std::string Myazo::ToMultiByte(const std::vector<wchar_t>& UnicodeBuffer)
+{
+	std::vector<char> TempBuffer(UnicodeBuffer.size(),0);
+	std::wcstombs(TempBuffer.data(),UnicodeBuffer.data(),UnicodeBuffer.size());
+	return std::string(TempBuffer.data());
 }

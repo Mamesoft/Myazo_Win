@@ -18,6 +18,7 @@ namespace Json
 	typedef std::map<std::wstring,Item> JsonHash;
 	typedef std::vector<Item> JsonArray;
 	typedef std::wstring JsonString;
+	typedef std::pair<std::wstring,Item> JsonHashPair;
 
 	class Item
 	{

@@ -5,7 +5,14 @@ Myazo::Myazo(const Myazo&)
 	return;
 }
 
-Myazo::Myazo(void):AppName(L"Myazo"),UserAgent(L"Myazo_win/0.00"),UploadDomain(L"myazo.net"),UploadScriptPath(L"upload.php"),TempFileNamePrefix(L"myazo")
+Myazo::Myazo(void):
+AppName(L"Myazo"),
+UserAgent(AppName+L"_win/0.00"),
+Boundary(L"h-o-g-e-p-i-y-o"),
+DefaultHeader(L"Content-Type: multipart/form-data; boundary="+Boundary),
+UploadDomain(L"myazo.net"),
+UploadScriptPath(L"upload.php"),
+SettingFileName(L"Setting")
 {
 	Instance=nullptr;
 	UploadAsPrivate=UtilityMode=CaptureStarted=false;
@@ -16,6 +23,10 @@ Myazo::Myazo(void):AppName(L"Myazo"),UserAgent(L"Myazo_win/0.00"),UploadDomain(L
 Myazo::~Myazo(void)
 {
 	KillTimer(MainWindow.GetWindowHandle(),100);
+	Json::Item Setting(Json::Type::Hash);
+	Setting.Hash().insert(Json::JsonHashPair(L"userid",UserID));
+	Setting.Hash().insert(Json::JsonHashPair(L"password",PassWord));
+	WriteSettingFile(JsonParser.Create(Setting));
 	return;
 }
 
@@ -40,7 +51,12 @@ bool Myazo::Init(void)
 {
 	int X,Y,Width,Height;
 	Instance=GetModuleHandle(nullptr);
+	std::vector<wchar_t> Temp(MAX_PATH,0);
+	SHGetSpecialFolderPath(nullptr,Temp.data(),CSIDL_APPDATA,false);
+	SettingDirectory=Temp.data();
+	SettingDirectory+=(*--SettingDirectory.end()==L'\\'?L"":L"\\")+AppName;
 	if(!ImageEncoder.Init()) return false;
+	InitSetting();
 	if(__argc==2) ExitProcess(PathFileExists(__wargv[1])&&IsImageFile(__wargv[1])?UploadImageFile(__wargv[1]):
 		(MessageBox(nullptr,L"指定されたファイルが存在しない、または画像ファイルではありません。",AppName.c_str(),MB_OK|MB_ICONERROR),1));
 	X=GetSystemMetrics(SM_XVIRTUALSCREEN);
@@ -84,6 +100,20 @@ bool Myazo::InitWindow(void)
 	AuthWindow=DialogWindow(WndClass);
 	if(!AuthWindow.Register()) return false;
 	return true;
+}
+
+bool Myazo::InitAuthWindow(void)
+{
+
+	return true;
+}
+
+void Myazo::InitSetting(void)
+{
+	auto Setting=JsonParser.Parse(ReadSettingFile());
+	UserID=Setting(L"userid");
+	PassWord=Setting(L"password");
+	return;
 }
 
 void Myazo::EnterMessageLoop(void)
