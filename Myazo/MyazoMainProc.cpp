@@ -16,8 +16,8 @@ LRESULT __stdcall Myazo::WndProc(HWND WindowHandle,unsigned int Message,WPARAM W
 	case WM_MOUSEMOVE:
 		if(Program.CaptureStarted) Program.UpdatePosition(LOWORD(LParam),HIWORD(LParam));
 		break;
-	case WM_TIMER:
-		if(WParam==100) Program.ProcessKeyMessage();
+	case WM_KEYDOWN:
+		Program.ProcessKeyMessage(WParam);
 		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);
@@ -48,24 +48,63 @@ LRESULT __stdcall Myazo::AuthWndProc(HWND WindowHandle,unsigned int Message,WPAR
 {
 	Myazo& Program=GetInstance();
 	switch(Message){
+	case WM_COMMAND:
+		Program.ProcessCommandMessage(LOWORD(WParam));
+		break;
+	case WM_DESTROY:
+		Program.MainWindow.Show(SW_SHOW);
+		break;
 	default:
 		return DefWindowProc(WindowHandle,Message,WParam,LParam);
 	}
 	return 0;
 }
 
-void Myazo::ProcessKeyMessage(void)
+void Myazo::ProcessKeyMessage(int VirtualKeyChar)
 {
-	if(GetKeyState(VK_ESCAPE)&0x8000) MainWindow.Destroy();
-	else if(GetKeyState('P')&0x8000){
+	switch(VirtualKeyChar){
+	case VK_ESCAPE:
+		MainWindow.Destroy();
+		LayerWindow.Destroy();
+		break;
+	case 'P':
 		UploadAsPrivate=!UploadAsPrivate;
+		MainWindow.Show(SW_HIDE);
 		MessageBox(nullptr,
 			UploadAsPrivate?L"非公開モードでアップロードされます。":L"公開モードでアップロードされます。",AppName.c_str(),MB_OK);
-	}else if(GetKeyState('A')&0x8000){
+		MainWindow.Show(SW_SHOW);
+		MainWindow.Focus();
+		break;
+	case 'A':
+		MainWindow.Show(SW_HIDE);
 		int WindowWidth=300,WindowHeight=150;
 		AuthWindow.Create(L"アカウントの認証",WS_CAPTION|WS_SYSMENU,0,
 			(GetSystemMetrics(SM_CXVIRTUALSCREEN)-WindowWidth)/2,
 			(GetSystemMetrics(SM_CYVIRTUALSCREEN)-WindowHeight)/2,WindowWidth,WindowHeight);
+		InitAuthWindow();
+		AuthWindow.ShowAndUpdate(SW_SHOW);
+		AuthWindow.Focus();
+	}
+	return;
+}
+
+void Myazo::ProcessCommandMessage(int ID)
+{
+	if(AuthWindow.IsExistControl(ID)){
+		auto Control=AuthWindow(ID);
+		if(Control==Controls[5]) OpenUrl(L"http://myazo.net/start/");
+		else if(Control==Controls[6]){
+			auto Result=Authenticate(Controls[2].GetCaption(),Controls[4].GetCaption());
+			if(!Result(L"error")){
+				MessageBox(AuthWindow.GetWindowHandle(),L"認証に成功しました。",AppName.c_str(),MB_OK|MB_ICONINFORMATION);
+				UserID=Controls[2].GetCaption();
+				PassWord=Controls[4].GetCaption();
+				AuthWindow.Message(WM_CLOSE,0,0);
+			}else{
+				MessageBox(AuthWindow.GetWindowHandle(),Result(L"errormessage").String().c_str(),AppName.c_str(),MB_OK|MB_ICONERROR);
+				if(Result.Hash().find(L"printurl")!=Result.Hash().end()) OpenUrl(Result(L"printurl"));
+			}
+		}else if(Control==Controls[7]) AuthWindow.Message(WM_CLOSE,0,0);
 	}
 	return;
 }
@@ -121,22 +160,36 @@ void Myazo::WriteSettingFile(const std::wstring& FileContent)
 	return;
 }
 
-std::wstring Myazo::Authenticate(const std::wstring& UserID,const std::wstring& PassWord)
+Json::Item Myazo::Authenticate(const std::wstring& UserID,const std::wstring& PassWord)
 {
 	std::ostringstream Message;
 	std::string Boundary=ToMultiByte(this->Boundary),NewLine="\r\n",Template="--"+Boundary+NewLine+"Content-Disposition: form-data; name=";
 	Message<<Template<<"\"id\""<<NewLine<<NewLine<<ToMultiByte(UserID)<<NewLine;
 	Message<<Template<<"\"pass\""<<NewLine<<NewLine<<ToMultiByte(PassWord)<<NewLine;
 	Message<<"--"<<Boundary<<"--"<<NewLine;
-	auto Result=JsonParser.Parse(Upload(Message.str(),DefaultHeader,UploadDomain,L"auth.php"));
-	return !Result(L"error")?std::wstring(L""):Result(L"errormessage");
+	return Upload(Message.str(),DefaultHeader,UploadDomain,L"auth.php");
+}
+
+void Myazo::SetClipboardText(const std::wstring& Text)
+{
+	int Size=(Text.length()+1)*sizeof(wchar_t);
+	HGLOBAL GlobalHandle=GlobalAlloc(GMEM_DDESHARE|GMEM_MOVEABLE,Size);
+	auto Pointer=GlobalLock(GlobalHandle);
+	std::memcpy(Pointer,Text.c_str(),Size);
+	GlobalUnlock(GlobalHandle);
+	OpenClipboard(nullptr);
+	EmptyClipboard();
+	SetClipboardData(CF_UNICODETEXT,GlobalHandle);
+	CloseClipboard();
+	GlobalFree(GlobalHandle);
+	return;
 }
 
 void Myazo::MoveLayerWindow(void)
 {
 	LayerWindow.Move(CaptureRect.left<CaptureRect.right?CaptureRect.left:CaptureRect.right,
 		CaptureRect.top<CaptureRect.bottom?CaptureRect.top:CaptureRect.bottom,
-		std::abs(CaptureRect.right-CaptureRect.left)+1,std::abs(CaptureRect.bottom-CaptureRect.top)+1,true);
+		std::abs(CaptureRect.right-CaptureRect.left+1),std::abs(CaptureRect.bottom-CaptureRect.top+1),true);
 	return;
 }
 
@@ -189,9 +242,14 @@ void Myazo::EndCapture(int X,int Y)
 	CaptureRect.bottom=Y;
 	MainWindow.Show(SW_HIDE);
 	LayerWindow.Show(SW_HIDE);
-	auto Result=JsonParser.Parse(Upload(CreateMessage(GetScreenShot()),DefaultHeader,UploadDomain,UploadScriptPath));
-	if(!Result(L"error")&&IsValidImageUrl(Result(L"imgurl"))) OpenUrl(Result(L"imgurl"));
-	else MessageBox(nullptr,Result(L"errormessage").String().c_str(),AppName.c_str(),MB_OK|MB_ICONERROR);
+	auto Result=Upload(CreateMessage(GetScreenShot()),DefaultHeader,UploadDomain,UploadScriptPath);
+	if(!Result(L"error")&&IsValidImageUrl(Result(L"imgurl"))){
+		OpenUrl(Result(L"printurl"));
+		SetClipboardText(Result(L"imgurl"));
+	}else{
+		MessageBox(nullptr,Result(L"errormessage").String().c_str(),AppName.c_str(),MB_OK|MB_ICONERROR);
+		if(Result.Hash().find(L"printurl")!=Result.Hash().end()) OpenUrl(Result(L"printurl"));
+	}
 	return;
 }
 
@@ -200,9 +258,10 @@ std::shared_ptr<IStream> Myazo::GetScreenShot(void)
 	HDC DesktopDC=GetDC(nullptr),CaptureDC=CreateCompatibleDC(DesktopDC);
 	unsigned int X=CaptureRect.left<CaptureRect.right?CaptureRect.left:CaptureRect.right,
 		Y=CaptureRect.top<CaptureRect.bottom?CaptureRect.top:CaptureRect.bottom,
-		Width=std::abs(CaptureRect.right-CaptureRect.left)+1,
-		Height=std::abs(CaptureRect.bottom-CaptureRect.top)+1;
-	HBITMAP CaptureBitmapHandle=CreateCompatibleBitmap(DesktopDC,Width,Height),PrevBitmapHandle=(HBITMAP)SelectObject(CaptureDC,CaptureBitmapHandle);
+		Width=std::abs(CaptureRect.right-CaptureRect.left+1),
+		Height=std::abs(CaptureRect.bottom-CaptureRect.top+1);
+	HBITMAP CaptureBitmapHandle=CreateCompatibleBitmap(DesktopDC,Width,Height),
+		PrevBitmapHandle=(HBITMAP)SelectObject(CaptureDC,CaptureBitmapHandle);
 	BitBlt(CaptureDC,0,0,Width,Height,DesktopDC,X,Y,SRCCOPY);
 	IStream* Stream;
 	CreateStreamOnHGlobal(nullptr,true,&Stream);
@@ -238,7 +297,7 @@ std::string Myazo::CreateMessage(std::shared_ptr<IStream>& ImageFileStream)
 	return Message.str();
 }
 
-std::wstring Myazo::Upload(const std::string& Message,const std::wstring& Header,const std::wstring& Domain,const std::wstring& ScriptPath)
+Json::Item Myazo::Upload(const std::string& Message,const std::wstring& Header,const std::wstring& Domain,const std::wstring& ScriptPath)
 {
 	auto DestroyFunction=[](void* Obj){if(Obj) InternetCloseHandle(Obj);};
 	std::shared_ptr<void> SessionHandle,ConnectionHandle,RequestHandle;
@@ -258,9 +317,9 @@ std::wstring Myazo::Upload(const std::string& Message,const std::wstring& Header
 		HttpEndRequest(RequestHandle.get(),nullptr,0,0);
 		std::vector<char> Temp(1024,0);
 		InternetReadFile(RequestHandle.get(),Temp.data(),Temp.size(),&WrittenSize);
-		return ToUnicode(Temp);
+		return JsonParser.Parse(ToUnicode(Temp));
 	}
-	return L"";
+	return Json::Item(Json::Type::Null);
 }
 
 void Myazo::OpenUrl(const std::wstring& Url)
@@ -299,9 +358,16 @@ int Myazo::UploadImageFile(const std::wstring& FileName)
 		if(!ImageEncoder.Save(&Image,StreamPtr)) return MessageBox(nullptr,L"PNG形式に変換出来ませんでした。",AppName.c_str(),MB_OK|MB_ICONERROR),1;
 		ImageFileStream.reset(StreamPtr,ReleaseFunction);
 	}
-	auto Result=JsonParser.Parse(Upload(CreateMessage(ImageFileStream),DefaultHeader,UploadDomain,UploadScriptPath));
-	return Result(L"error")&&IsValidImageUrl(Result(L"imgurl"))?OpenUrl(Result(L"imgurl")),0:
-		MessageBox(nullptr,Result(L"errormessage").String().c_str(),AppName.c_str(),MB_OK|MB_ICONERROR),1;
+	auto Result=Upload(CreateMessage(ImageFileStream),DefaultHeader,UploadDomain,UploadScriptPath);
+	if(Result(L"error")&&IsValidImageUrl(Result(L"imgurl"))){
+		OpenUrl(Result(L"printurl"));
+		SetClipboardText(Result(L"imgurl"));
+		return 0;
+	}else{
+		MessageBox(nullptr,Result(L"errormessage").String().c_str(),AppName.c_str(),MB_OK|MB_ICONERROR);
+		if(Result.Hash().find(L"printurl")!=Result.Hash().end()) OpenUrl(Result(L"printurl"));
+		return 1;
+	}
 }
 
 std::wstring Myazo::ToUnicode(const std::string& MultiByteString)
@@ -313,7 +379,7 @@ std::wstring Myazo::ToUnicode(const std::string& MultiByteString)
 
 std::wstring Myazo::ToUnicode(const std::vector<char>& MultiByteBuffer)
 {
-	std::vector<wchar_t> TempBuffer(MultiByteBuffer.size(),0);
+	std::vector<wchar_t> TempBuffer(MultiByteBuffer.size()+1,0);
 	std::mbstowcs(TempBuffer.data(),MultiByteBuffer.data(),MultiByteBuffer.size());
 	return std::wstring(TempBuffer.data());
 }
@@ -327,7 +393,7 @@ std::string Myazo::ToMultiByte(const std::wstring& UnicodeString)
 
 std::string Myazo::ToMultiByte(const std::vector<wchar_t>& UnicodeBuffer)
 {
-	std::vector<char> TempBuffer(UnicodeBuffer.size(),0);
+	std::vector<char> TempBuffer(UnicodeBuffer.size()+1,0);
 	std::wcstombs(TempBuffer.data(),UnicodeBuffer.data(),UnicodeBuffer.size());
 	return std::string(TempBuffer.data());
 }

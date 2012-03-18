@@ -33,7 +33,7 @@ Window::Window(Window&& RightRef)
 	return;
 }
 
-Window::Window(std::wstring ClassName,int ID,Window* ParentWindow)
+Window::Window(const std::wstring& ClassName,int ID,Window* const ParentWindow)
 {
 	Init();
 	*this->ID=ID;
@@ -53,7 +53,7 @@ void Window::Init(void)
 	return;
 }
 
-bool Window::Create(std::wstring Caption,unsigned long WindowStyle,int X,int Y,int Width,int Height)
+bool Window::Create(const std::wstring& Caption,unsigned long WindowStyle,int X,int Y,int Width,int Height)
 {
 	if(!*WindowHandle){
 		*WindowHandle=CreateWindowEx(0,WindowClassName.c_str(),Caption.c_str(),WindowStyle,
@@ -66,7 +66,7 @@ bool Window::Create(std::wstring Caption,unsigned long WindowStyle,int X,int Y,i
 	return *WindowHandle?true:false;
 }
 
-bool Window::Create(std::wstring Caption,unsigned long WindowStyle,unsigned long WindowStyleEx,int X,int Y,int Width,int Height)
+bool Window::Create(const std::wstring& Caption,unsigned long WindowStyle,unsigned long WindowStyleEx,int X,int Y,int Width,int Height)
 {
 	if(!*WindowHandle){
 		*WindowHandle=CreateWindowEx(WindowStyleEx,WindowClassName.c_str(),Caption.c_str(),WindowStyle,
@@ -115,9 +115,30 @@ bool Window::ShowAndUpdate(int Flag)
 	return IsWindow(*WindowHandle)&&ShowWindow(*WindowHandle,Flag)&&UpdateWindow(*WindowHandle)?true:false;
 }
 
+void Window::Focus(void)
+{
+	SetForegroundWindow(*WindowHandle);
+	return;
+}
+
 long Window::Message(unsigned int Message,unsigned int WParam,long LParam)
 {
 	return IsWindow(*WindowHandle)?SendMessage(*WindowHandle,Message,WParam,LParam):0;
+}
+
+std::wstring Window::GetCaption(void)const
+{
+	if(!IsWindow(*WindowHandle)) return L"";
+	std::vector<wchar_t> Buffer(512,0);
+	GetWindowText(*WindowHandle,Buffer.data(),Buffer.size());
+	return std::wstring(Buffer.data());
+}
+
+void Window::SetCaption(const std::wstring& Caption)
+{
+	if(!IsWindow(*WindowHandle)) return;
+	SetWindowText(*WindowHandle,Caption.c_str());
+	return;
 }
 
 HWND Window::GetWindowHandle(void)const
@@ -162,70 +183,78 @@ void Window::SetWindowStyleEx(unsigned long StyleEx)
 	return;
 }
 
-bool Window::AddControl(std::wstring ClassName,std::wstring Caption,unsigned long WindowStyle,int X,int Y,int Width,int Height,int ID)
-{
-	Window Control(ClassName,ID,this);
-	return Control.Create(Caption,WindowStyle,X,Y,Width,Height)?ChildControls->push_back(Control),true:false;
-}
-
-bool Window::AddControl(std::wstring ClassName,std::wstring Caption,unsigned long WindowStyle,unsigned long WindowStyleEx,int X,int Y,int Width,int Height,int ID)
-{
-	Window Control(ClassName,ID,this);
-	return Control.Create(Caption,WindowStyle,WindowStyleEx,X,Y,Width,Height)?ChildControls->push_back(std::move(Control)),true:false;
-}
-
 bool Window::AddControl(const Window& Control)
 {
-	return Control==*this?ChildControls->push_back(Control),true:false;
+	return Control.ParentWindow==this?ChildControls->push_back(Control),true:false;
 }
 
 bool Window::AddControl(Window&& Control)
 {
-	return Control==*this?ChildControls->push_back(std::move(Control)),true:false;
+	return Control.ParentWindow==this?ChildControls->push_back(std::move(Control)),true:false;
 }
 
 bool Window::RemoveControl(const Window& Control)
 {
-	auto Iterator=std::find_if(ChildControls->cbegin(),ChildControls->cend(),[&](const Window& Item){return Item==Control?true:false;});
+	auto Iterator=std::find_if(ChildControls->cbegin(),ChildControls->cend(),[&](const Window& Item){return Item==Control;});
 	if(Iterator==ChildControls->cend()) return false;
 	ChildControls->erase(Iterator);
 	return true;
 }
 
-bool Window::RemoveControlByHandle(HWND WindowHandle)
+bool Window::RemoveControl(const HWND& WindowHandle)
 {
-	auto Iterator=std::find_if(ChildControls->cbegin(),ChildControls->cend(),[&](const Window& Item){return *Item.WindowHandle==WindowHandle?true:false;});
+	auto Iterator=std::find_if(ChildControls->cbegin(),ChildControls->cend(),[&](const Window& Item){return *Item.WindowHandle==WindowHandle;});
 	if(Iterator==ChildControls->cend()) return false;
 	ChildControls->erase(Iterator);
 	return true;
 }
 
-bool Window::RemoveControlByID(int ID)
+bool Window::RemoveControl(const int& ID)
 {
-	auto Iterator=std::find_if(ChildControls->cbegin(),ChildControls->cend(),[&](const Window& Item){return *Item.ID==ID?true:false;});
+	auto Iterator=std::find_if(ChildControls->cbegin(),ChildControls->cend(),[&](const Window& Item){return *Item.ID==ID;});
 	if(Iterator==ChildControls->cend()) return false;
 	ChildControls->erase(Iterator);
 	return true;
 }
 
-Window& Window::GetControl(int Index)
+Window& Window::GetControl(const HWND& WindowHandle)
 {
-	if(Index<0||Index>=ChildControls->size()) throw std::exception();
-	return ChildControls->at(Index);
-}
-
-Window& Window::GetControlByHandle(HWND WindowHandle)
-{
-	auto Iterator=std::find_if(ChildControls->begin(),ChildControls->end(),[&](const Window& Item){return *Item.WindowHandle==WindowHandle?true:false;});
+	auto Iterator=std::find_if(ChildControls->begin(),ChildControls->end(),[&](const Window& Item){return *Item.WindowHandle==WindowHandle;});
 	if(Iterator==ChildControls->end()) throw std::exception();
 	return *Iterator;
 }
 
-Window& Window::GetControlByID(int ID)
+Window& Window::GetControl(const int& ID)
 {
-	auto Iterator=std::find_if(ChildControls->begin(),ChildControls->end(),[&](const Window& Item){return *Item.ID==ID?true:false;});
+	auto Iterator=std::find_if(ChildControls->begin(),ChildControls->end(),[&](const Window& Item){return *Item.ID==ID;});
 	if(Iterator==ChildControls->end()) throw std::exception();
 	return *Iterator;
+}
+
+const Window& Window::GetControl(const HWND& WindowHandle)const
+{
+	auto Iterator=std::find_if(ChildControls->cbegin(),ChildControls->cend(),[&](const Window& Item){return *Item.WindowHandle==WindowHandle;});
+	if(Iterator==ChildControls->cend()) throw std::exception();
+	return *Iterator;
+}
+
+const Window& Window::GetControl(const int& ID)const
+{
+	auto Iterator=std::find_if(ChildControls->cbegin(),ChildControls->cend(),[&](const Window& Item){return *Item.ID==ID;});
+	if(Iterator==ChildControls->cend()) throw std::exception();
+	return *Iterator;
+}
+
+bool Window::IsExistControl(const HWND& WindowHandle)const
+{
+	auto Iterator=std::find_if(ChildControls->cbegin(),ChildControls->cend(),[&](const Window& Item){return *Item.WindowHandle==WindowHandle;});
+	return !(Iterator==ChildControls->cend());
+}
+
+bool Window::IsExistControl(const int& ID)const
+{
+	auto Iterator=std::find_if(ChildControls->cbegin(),ChildControls->cend(),[&](const Window& Item){return *Item.ID==ID;});
+	return !(Iterator==ChildControls->cend());
 }
 
 Window& Window::operator=(const Window& LeftRef)
@@ -248,6 +277,34 @@ Window& Window::operator=(Window&& RightRef)
 	WindowClassName=std::move(RightRef.WindowClassName);
 	ParentWindow=RightRef.ParentWindow;
 	return *this;
+}
+
+Window& Window::operator()(const HWND& WindowHandle)
+{
+	auto Iterator=std::find_if(ChildControls->begin(),ChildControls->end(),[&](const Window& Item){return *Item.WindowHandle==WindowHandle;});
+	if(Iterator==ChildControls->end()) throw std::exception();
+	return *Iterator;
+}
+
+Window& Window::operator()(const int& ID)
+{
+	auto Iterator=std::find_if(ChildControls->begin(),ChildControls->end(),[&](const Window& Item){return *Item.ID==ID;});
+	if(Iterator==ChildControls->end()) throw std::exception();
+	return *Iterator;
+}
+
+const Window& Window::operator()(const HWND& WindowHandle)const
+{
+	auto Iterator=std::find_if(ChildControls->cbegin(),ChildControls->cend(),[&](const Window& Item){return *Item.WindowHandle==WindowHandle;});
+	if(Iterator==ChildControls->cend()) throw std::exception();
+	return *Iterator;
+}
+
+const Window& Window::operator()(const int& ID)const
+{
+	auto Iterator=std::find_if(ChildControls->cbegin(),ChildControls->cend(),[&](const Window& Item){return *Item.ID==ID;});
+	if(Iterator==ChildControls->cend()) throw std::exception();
+	return *Iterator;
 }
 
 DialogWindow::DialogWindow(void)
@@ -369,9 +426,47 @@ unsigned short DialogWindow::GetWindowClassAtom(void)const
 	return *ClassAtom;
 }
 
+WNDPROC DialogWindow::GetWindowProc(void)const
+{
+	if(!IsWindow(*WindowHandle)) return nullptr;
+	return (WNDPROC)GetWindowLong(*WindowHandle,GWL_WNDPROC);
+}
+
+void DialogWindow::SetWindowProc(WNDPROC& Proc)
+{
+	if(IsWindow(*WindowHandle)) return;
+	SetWindowLong(*WindowHandle,GWL_WNDPROC,(long)Proc);
+	return;
+}
+
+HICON DialogWindow::GetWindowIcon(void)const
+{
+	if(!IsWindow(*WindowHandle)) return nullptr;
+	return (HICON)SendMessage(*WindowHandle,WM_GETICON,ICON_BIG,0);
+}
+
+void DialogWindow::SetWindowIcon(HICON& Icon)
+{
+	if(!IsWindow(*WindowHandle)) return;
+	SendMessage(*WindowHandle,WM_SETICON,ICON_BIG,(LPARAM)Icon);
+	return;
+}
+
+HICON DialogWindow::GetWindowSmallIcon(void)const
+{
+	if(!IsWindow(*WindowHandle)) return nullptr;
+	return (HICON)SendMessage(*WindowHandle,WM_GETICON,ICON_SMALL,0);
+}
+
+void DialogWindow::SetWindowSmallIcon(HICON& SmallIcon)
+{
+	if(!IsWindow(*WindowHandle)) return;
+	SendMessage(*WindowHandle,WM_SETICON,ICON_SMALL,(LPARAM)SmallIcon);
+	return;
+}
+
 DialogWindow& DialogWindow::operator=(const DialogWindow& LeftRef)
 {
-
 	if(*WindowHandle) Destroy();
 	WindowHandle=LeftRef.WindowHandle;
 	ID=LeftRef.ID;

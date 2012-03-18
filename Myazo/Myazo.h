@@ -10,8 +10,9 @@ private:
 	bool UploadAsPrivate,UtilityMode,CaptureStarted;
 	PNGFile ImageEncoder;
 	DialogWindow MainWindow,LayerWindow,AuthWindow;
+	std::array<Window,10> Controls;
 	RECT CaptureRect;
-	std::shared_ptr<Gdiplus::Font> LayerWindowFont;
+	std::shared_ptr<Gdiplus::Font> LayerWindowFont,UIFont;
 	const std::wstring AppName,UserAgent,Boundary,DefaultHeader,UploadDomain,UploadScriptPath,SettingFileName;
 	std::wstring UserID,PassWord,SettingDirectory;
 	Json::Parser JsonParser;
@@ -24,12 +25,14 @@ private:
 	bool InitWindow(void);
 	bool InitAuthWindow(void);
 	void InitSetting(void);
-	void ProcessKeyMessage(void);
+	void ProcessKeyMessage(int VirtualKeyChar);
+	void ProcessCommandMessage(int ID);
 	void Encrypt(std::vector<wchar_t>& Data);
 	void Decrypt(std::vector<wchar_t>& Data);
 	std::wstring ReadSettingFile(void);
 	void WriteSettingFile(const std::wstring& FileContent);
-	std::wstring Authenticate(const std::wstring& UserID,const std::wstring& PassWord);
+	Json::Item Authenticate(const std::wstring& UserID,const std::wstring& PassWord);
+	void SetClipboardText(const std::wstring& Test);
 	void MoveLayerWindow(void);
 	void DrawLayerWindowContent(void);
 	void StartCapture(int X,int Y);
@@ -37,7 +40,7 @@ private:
 	void EndCapture(int X, int Y);
 	std::shared_ptr<IStream> GetScreenShot(void);
 	std::string CreateMessage(std::shared_ptr<IStream>& ImageFileStream);
-	std::wstring Upload(const std::string& Message,const std::wstring& Header,const std::wstring& Domain,const std::wstring& ScriptPath);
+	Json::Item Upload(const std::string& Message,const std::wstring& Header,const std::wstring& Domain,const std::wstring& ScriptPath);
 	void OpenUrl(const std::wstring& Url);
 	bool IsImageFile(const std::wstring& FileName);
 	bool IsValidImageUrl(const std::wstring& Url);

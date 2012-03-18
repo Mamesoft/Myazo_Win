@@ -16,16 +16,19 @@ public:
 	Window(void);
 	Window(const Window& LeftRef);
 	Window(Window&& RightRef);
-	Window(std::wstring ClassName,int ID,Window* ParentWindow);
-	bool Create(std::wstring Caption,unsigned long WindowStyle,int X,int Y,int Width,int Height);
-	bool Create(std::wstring Caption,unsigned long WindowStyle,unsigned long WindowStyleEx,int X,int Y,int Width,int Height);
+	Window(const std::wstring& ClassName,int ID,Window* const ParentWindow);
+	bool Create(const std::wstring& Caption,unsigned long WindowStyle,int X,int Y,int Width,int Height);
+	bool Create(const std::wstring& Caption,unsigned long WindowStyle,unsigned long WindowStyleEx,int X,int Y,int Width,int Height);
 	bool IsCreated(void)const;
 	bool Destroy(void);
 	bool Move(int X,int Y,int Width,int Height,bool Redraw=true);
 	bool Show(int Flag);
 	bool Update(void);
 	bool ShowAndUpdate(int Flag);
+	void Focus(void);
 	long Message(unsigned int Message,WPARAM WParam,LPARAM LParam);
+	std::wstring GetCaption(void)const;
+	void SetCaption(const std::wstring& Caption);
 	HWND GetWindowHandle(void)const;
 	int GetWindowID(void)const;
 	Window* GetParentWindow(void)const;
@@ -34,24 +37,27 @@ public:
 	void SetWindowStyle(unsigned long Style);
 	unsigned long GetWindowStyleEx(void)const;
 	void SetWindowStyleEx(unsigned long StyleEx);
-	bool AddControl(std::wstring ClassName,std::wstring Caption,unsigned long WindowStyle,int X,int Y,int Width,int Height,int ID);
-	bool AddControl(std::wstring ClassName,std::wstring Caption,unsigned long WindowStyle,unsigned long WindowStyleEx,int X,int Y,int Width,int Height,int ID);
 	bool AddControl(const Window& Control);
 	bool AddControl(Window&& Control);
 	bool RemoveControl(const Window& Control);
-	bool RemoveControlByHandle(HWND WindowHandle);
-	bool RemoveControlByID(int ID);
-	Window& GetControl(int Index);
-	Window& GetControlByHandle(HWND WindowHandle);
-	Window& GetControlByID(int ControlID);
-	bool IsExistControlByHandle(HWND WindowHandle);
-	bool IsExistControlByID(int ControlID);
+	bool RemoveControl(const HWND &WindowHandle);
+	bool RemoveControl(const int& ID);
+	Window& GetControl(const HWND& WindowHandle);
+	Window& GetControl(const int& ID);
+	const Window& GetControl(const HWND& WindowHandle)const;
+	const Window& GetControl(const int& ID)const;
+	bool IsExistControl(const HWND& WindowHandle)const;
+	bool IsExistControl(const int& ID)const;
 	Window& operator=(const Window& LeftRef);
 	Window& operator=(Window&& RightRef);
+	Window& operator()(const HWND& WindowHandle);
+	Window& operator()(const int& ID);
+	const Window& operator()(const HWND& WindowHandle)const;
+	const Window& operator()(const int& ID)const;
 	
 };
 
-class DialogWindow : public Window
+class DialogWindow:public Window
 {
 protected:
 	std::shared_ptr<WNDCLASSEX> WindowClass;
@@ -75,8 +81,11 @@ public:
 	bool IsRegistered(void)const;
 	unsigned short GetWindowClassAtom(void)const;
 	WNDPROC GetWindowProc(void)const;
+	void SetWindowProc(WNDPROC& Proc);
 	HICON GetWindowIcon(void)const;
+	void SetWindowIcon(HICON& Icon);
 	HICON GetWindowSmallIcon(void)const;
+	void SetWindowSmallIcon(HICON& SmallIcon);
 	DialogWindow& operator=(const DialogWindow& LeftRef);
 	DialogWindow& operator=(DialogWindow&& RightRef);
 

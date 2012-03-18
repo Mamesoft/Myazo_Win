@@ -22,7 +22,6 @@ SettingFileName(L"Setting")
 
 Myazo::~Myazo(void)
 {
-	KillTimer(MainWindow.GetWindowHandle(),100);
 	Json::Item Setting(Json::Type::Hash);
 	Setting.Hash().insert(Json::JsonHashPair(L"userid",UserID));
 	Setting.Hash().insert(Json::JsonHashPair(L"password",PassWord));
@@ -64,13 +63,14 @@ bool Myazo::Init(void)
 	Width=GetSystemMetrics(SM_CXVIRTUALSCREEN);
 	Height=GetSystemMetrics(SM_CYVIRTUALSCREEN);
 	if(!InitWindow()) return false;
-	if(!MainWindow.Create(AppName.c_str(),WS_POPUP,WS_EX_TRANSPARENT|WS_EX_TOOLWINDOW|WS_EX_TOPMOST|WS_EX_NOACTIVATE,0,0,0,0)) return false;
+	if(!MainWindow.Create(AppName.c_str(),WS_POPUP,WS_EX_TRANSPARENT|WS_EX_TOOLWINDOW|WS_EX_TOPMOST,0,0,0,0)) return false;
 	MainWindow.Move(X,Y,Width,Height,false);
 	MainWindow.ShowAndUpdate(SW_SHOW);
-	if(!LayerWindow.Create(AppName.c_str(),WS_POPUP,WS_EX_TOOLWINDOW|WS_EX_LAYERED|WS_EX_TOPMOST|WS_EX_NOACTIVATE,100,100,300,300)) return false;
+	MainWindow.Focus();
+	if(!LayerWindow.Create(AppName.c_str(),WS_POPUP,WS_EX_TOOLWINDOW|WS_EX_LAYERED|WS_EX_TOPMOST|WS_EX_NOACTIVATE,0,0,0,0)) return false;
 	SetLayeredWindowAttributes(LayerWindow.GetWindowHandle(),RGB(255,0,0),100,LWA_COLORKEY|LWA_ALPHA);
-	SetTimer(MainWindow.GetWindowHandle(),100,100,nullptr);
 	LayerWindowFont.reset(new Gdiplus::Font(L"Tahoma",8));
+	UIFont.reset(new Gdiplus::Font(L"MS UI Gothic",9.75f));
 	return true;
 }
 
@@ -104,7 +104,21 @@ bool Myazo::InitWindow(void)
 
 bool Myazo::InitAuthWindow(void)
 {
-
+	int ID=1000;
+	std::wstring ClassNames[]={L"Static",L"Static",L"Edit",L"Static",L"Edit",L"Button",L"Button",L"Button"},
+		Captions[]={L"下のテキストボックスにIDとパスワードを入力して、\n「認証」ボタンを押して下さい。",
+			L"ID",L"",L"パスワード",L"",L"新規登録をする",L"認証",L"キャンセル"};
+	int DefaultStyle=WS_CHILD|WS_VISIBLE,
+		Styles[]={DefaultStyle|SS_LEFT,DefaultStyle|SS_LEFT,DefaultStyle|ES_LEFT|ES_AUTOHSCROLL,DefaultStyle|SS_LEFT,
+			DefaultStyle|ES_LEFT|ES_PASSWORD|ES_AUTOHSCROLL,DefaultStyle|BS_CENTER,DefaultStyle|BS_CENTER,DefaultStyle|BS_CENTER},
+		ExStyles[]={0,0,WS_EX_CLIENTEDGE,0,WS_EX_CLIENTEDGE,0,0,0},
+		X[]={10,10,65,10,65,30,135,215},Y[]={10,48,45,73,70,94,94,94},
+		Width[]={250,50,200,50,200,100,75,75},Height[]={24,12,19,12,19,23,23,23};
+	for(int i=0;i<sizeof(ClassNames)/sizeof(std::wstring);i++){
+		AuthWindow.AddControl(Controls[i]=Window(ClassNames[i],ID+i,&AuthWindow));
+		Controls[i].Create(Captions[i],Styles[i],ExStyles[i],X[i],Y[i],Width[i],Height[i]);
+		Controls[i].Message(WM_SETFONT,(WPARAM)GetStockObject(DEFAULT_GUI_FONT),MAKELPARAM(true,0));
+	}
 	return true;
 }
 
