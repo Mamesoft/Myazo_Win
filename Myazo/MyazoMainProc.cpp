@@ -48,10 +48,17 @@ LRESULT __stdcall Myazo::AuthWndProc(HWND WindowHandle,unsigned int Message,WPAR
 {
 	Myazo& Program=GetInstance();
 	switch(Message){
+	case WM_CREATE:
+		Program.MainWindow.Show(SW_HIDE);
+		break;
 	case WM_COMMAND:
 		Program.ProcessCommandMessage(LOWORD(WParam));
 		break;
 	case WM_DESTROY:
+		if(Program.FirstBoot){
+			Program.CheckArgumentOrUpload();
+			Program.InitWindow();
+		}
 		Program.MainWindow.Show(SW_SHOW);
 		break;
 	default:
@@ -71,19 +78,12 @@ void Myazo::ProcessKeyMessage(int VirtualKeyChar)
 		UploadAsPrivate=!UploadAsPrivate;
 		MainWindow.Show(SW_HIDE);
 		MessageBox(nullptr,
-			UploadAsPrivate?L"非公開モードでアップロードされます。":L"公開モードでアップロードされます。",AppName.c_str(),MB_OK);
+			UploadAsPrivate?L"非公開モードでアップロードされます。":L"公開モードでアップロードされます。",AppName.c_str(),MB_OK|MB_ICONINFORMATION);
 		MainWindow.Show(SW_SHOW);
 		MainWindow.Focus();
 		break;
 	case 'A':
-		MainWindow.Show(SW_HIDE);
-		int WindowWidth=300,WindowHeight=150;
-		AuthWindow.Create(L"アカウントの認証",WS_CAPTION|WS_SYSMENU,0,
-			(GetSystemMetrics(SM_CXVIRTUALSCREEN)-WindowWidth)/2,
-			(GetSystemMetrics(SM_CYVIRTUALSCREEN)-WindowHeight)/2,WindowWidth,WindowHeight);
-		InitAuthWindow();
-		AuthWindow.ShowAndUpdate(SW_SHOW);
-		AuthWindow.Focus();
+		OpenAuthWindow();
 	}
 	return;
 }
@@ -130,8 +130,8 @@ void Myazo::Decrypt(std::vector<wchar_t>& Data)
 std::wstring Myazo::ReadSettingFile(void)
 {
 	const wchar_t* EmptySettingString=L"{\"userid\":\"\",\"password\":\"\"}";
-	const auto& Path=SettingDirectory+(*--SettingDirectory.end()==L'\\'?L"":L"\\")+SettingFileName;
-	if(PathIsDirectory(SettingDirectory.c_str())&&PathFileExists(Path.c_str())){
+	const auto& Path=SettingFileDirectory+(*--SettingFileDirectory.end()==L'\\'?L"":L"\\")+SettingFileName;
+	if(PathIsDirectory(SettingFileDirectory.c_str())&&PathFileExists(Path.c_str())){
 		std::ifstream SettingFile(Path,std::ios::in|std::ios::binary);
 		SettingFile.seekg(0,std::ios::end);
 		int Size=SettingFile.tellg();
@@ -144,14 +144,15 @@ std::wstring Myazo::ReadSettingFile(void)
 		Decrypt(Data);
 		return std::wstring(Data.data(),Data.size());
 	}else{
-		CreateDirectory(SettingDirectory.c_str(),nullptr);
+		FirstBoot=true;
+		CreateDirectory(SettingFileDirectory.c_str(),nullptr);
 		return EmptySettingString;
 	}
 }
 
 void Myazo::WriteSettingFile(const std::wstring& FileContent)
 {
-	std::ofstream SettingFile(SettingDirectory+(*--SettingDirectory.end()==L'\\'?L"":L"\\")+SettingFileName,
+	std::ofstream SettingFile(SettingFileDirectory+(*--SettingFileDirectory.end()==L'\\'?L"":L"\\")+SettingFileName,
 		std::ios::out|std::ios::binary|std::ios::trunc);
 	std::vector<wchar_t> Data(FileContent.length(),0);
 	std::memcpy(Data.data(),FileContent.c_str(),sizeof(wchar_t)*FileContent.length());
@@ -168,6 +169,18 @@ Json::Item Myazo::Authenticate(const std::wstring& UserID,const std::wstring& Pa
 	Message<<Template<<"\"pass\""<<NewLine<<NewLine<<ToMultiByte(PassWord)<<NewLine;
 	Message<<"--"<<Boundary<<"--"<<NewLine;
 	return Upload(Message.str(),DefaultHeader,UploadDomain,L"auth.php");
+}
+
+void Myazo::OpenAuthWindow(void)
+{
+	int WindowWidth=300,WindowHeight=150;
+	AuthWindow.Create(L"アカウントの認証",WS_CAPTION|WS_SYSMENU,0,
+		(GetSystemMetrics(SM_CXVIRTUALSCREEN)-WindowWidth)/2,
+		(GetSystemMetrics(SM_CYVIRTUALSCREEN)-WindowHeight)/2,WindowWidth,WindowHeight);
+	InitAuthWindow();
+	AuthWindow.ShowAndUpdate(SW_SHOW);
+	AuthWindow.Focus();
+	return;
 }
 
 void Myazo::SetClipboardText(const std::wstring& Text)
@@ -342,7 +355,7 @@ bool Myazo::IsValidImageUrl(const std::wstring& Url)
 	return std::regex_match(Url,std::wregex(L"http://myazo.net/[0-9a-fA-F]{32}\\.png"));
 }
 
-int Myazo::UploadImageFile(const std::wstring& FileName)
+bool Myazo::UploadImageFile(const std::wstring& FileName)
 {
 	auto ReleaseFunction=[](IStream* Obj){if(Obj) Obj->Release();};
 	IStream* StreamPtr;
@@ -359,15 +372,30 @@ int Myazo::UploadImageFile(const std::wstring& FileName)
 		ImageFileStream.reset(StreamPtr,ReleaseFunction);
 	}
 	auto Result=Upload(CreateMessage(ImageFileStream),DefaultHeader,UploadDomain,UploadScriptPath);
-	if(Result(L"error")&&IsValidImageUrl(Result(L"imgurl"))){
+	if(!Result(L"error")&&IsValidImageUrl(Result(L"imgurl"))){
 		OpenUrl(Result(L"printurl"));
 		SetClipboardText(Result(L"imgurl"));
-		return 0;
+		return true;
 	}else{
 		MessageBox(nullptr,Result(L"errormessage").String().c_str(),AppName.c_str(),MB_OK|MB_ICONERROR);
 		if(Result.Hash().find(L"printurl")!=Result.Hash().end()) OpenUrl(Result(L"printurl"));
-		return 1;
+		return false;
 	}
+}
+
+void Myazo::CheckArgumentOrUpload(void)
+{
+	if(__argc==2&&PathFileExists(__wargv[1])&&IsImageFile(__wargv[1])){
+		int ExitCode=0;
+		if(UploadImageFile(__wargv[1])) ExitCode=0;
+		else{
+			MessageBox(nullptr,L"指定されたファイルが存在しない、または画像ファイルではありません。",AppName.c_str(),MB_OK|MB_ICONERROR);
+			ExitCode=1;
+		}
+		SaveSetting();
+		ExitProcess(ExitCode);
+	}
+	return;
 }
 
 std::wstring Myazo::ToUnicode(const std::string& MultiByteString)

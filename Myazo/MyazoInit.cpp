@@ -15,17 +15,15 @@ UploadScriptPath(L"upload.php"),
 SettingFileName(L"Setting")
 {
 	Instance=nullptr;
-	UploadAsPrivate=UtilityMode=CaptureStarted=false;
+	UploadAsPrivate=true;
+	UtilityMode=CaptureStarted=FirstBoot=false;
 	ZeroMemory(&CaptureRect,sizeof(CaptureRect));
 	return;
 }
 
 Myazo::~Myazo(void)
 {
-	Json::Item Setting(Json::Type::Hash);
-	Setting.Hash().insert(Json::JsonHashPair(L"userid",UserID));
-	Setting.Hash().insert(Json::JsonHashPair(L"password",PassWord));
-	WriteSettingFile(JsonParser.Create(Setting));
+	SaveSetting();
 	return;
 }
 
@@ -39,7 +37,6 @@ Myazo& Myazo::operator=(Myazo&&)
 	return *this;
 }
 
-
 Myazo& Myazo::GetInstance(void)
 {
 	static Myazo& Instance=Myazo();
@@ -48,42 +45,37 @@ Myazo& Myazo::GetInstance(void)
 
 bool Myazo::Init(void)
 {
-	int X,Y,Width,Height;
 	Instance=GetModuleHandle(nullptr);
 	std::vector<wchar_t> Temp(MAX_PATH,0);
 	SHGetSpecialFolderPath(nullptr,Temp.data(),CSIDL_APPDATA,false);
-	SettingDirectory=Temp.data();
-	SettingDirectory+=(*--SettingDirectory.end()==L'\\'?L"":L"\\")+AppName;
+	SettingFileDirectory=Temp.data();
+	SettingFileDirectory+=(*--SettingFileDirectory.end()==L'\\'?L"":L"\\")+AppName;
 	if(!ImageEncoder.Init()) return false;
+	if(!InitWindowClass()) return false;
 	InitSetting();
-	if(__argc==2) ExitProcess(PathFileExists(__wargv[1])&&IsImageFile(__wargv[1])?UploadImageFile(__wargv[1]):
-		(MessageBox(nullptr,L"指定されたファイルが存在しない、または画像ファイルではありません。",AppName.c_str(),MB_OK|MB_ICONERROR),1));
-	X=GetSystemMetrics(SM_XVIRTUALSCREEN);
-	Y=GetSystemMetrics(SM_YVIRTUALSCREEN);
-	Width=GetSystemMetrics(SM_CXVIRTUALSCREEN);
-	Height=GetSystemMetrics(SM_CYVIRTUALSCREEN);
-	if(!InitWindow()) return false;
-	if(!MainWindow.Create(AppName.c_str(),WS_POPUP,WS_EX_TRANSPARENT|WS_EX_TOOLWINDOW|WS_EX_TOPMOST,0,0,0,0)) return false;
-	MainWindow.Move(X,Y,Width,Height,false);
-	MainWindow.ShowAndUpdate(SW_SHOW);
-	MainWindow.Focus();
-	if(!LayerWindow.Create(AppName.c_str(),WS_POPUP,WS_EX_TOOLWINDOW|WS_EX_LAYERED|WS_EX_TOPMOST|WS_EX_NOACTIVATE,0,0,0,0)) return false;
-	SetLayeredWindowAttributes(LayerWindow.GetWindowHandle(),RGB(255,0,0),100,LWA_COLORKEY|LWA_ALPHA);
+	if(FirstBoot) OpenAuthWindow();
+	else{
+		CheckArgumentOrUpload();
+		if(!InitWindow()) return false;
+	}
 	LayerWindowFont.reset(new Gdiplus::Font(L"Tahoma",8));
 	UIFont.reset(new Gdiplus::Font(L"MS UI Gothic",9.75f));
 	return true;
 }
 
-bool Myazo::InitWindow(void)
+bool Myazo::InitWindowClass(void)
 {
+	Handle Cursor(LoadCursor(Instance,MAKEINTRESOURCE(IDC_CURSOR1)),[](void* Obj){if(Obj) DestroyCursor((HCURSOR)Obj);}),
+		Icon(LoadImage(Instance,MAKEINTRESOURCE(IDI_ICON1),IMAGE_ICON,32,32,0),[](void* Obj){if(Obj) DeleteObject(Obj);}),
+		IconSmall(LoadImage(Instance,MAKEINTRESOURCE(IDI_ICON1),IMAGE_ICON,16,16,0),[](void* Obj){if(Obj) DeleteObject(Obj);});
 	WNDCLASSEX WndClass;
 	ZeroMemory(&WndClass,sizeof(WndClass));
 	WndClass.cbSize=sizeof(WndClass);
 	WndClass.lpfnWndProc=WndProc;
 	WndClass.hInstance=GetModuleHandle(nullptr);
-	WndClass.hIcon=(HICON)LoadImage(Instance,L"",IMAGE_ICON,32,32,0);
-	WndClass.hIconSm=(HICON)LoadImage(Instance,L"",IMAGE_ICON,16,16,0);
-	WndClass.hCursor=LoadCursor(Instance,MAKEINTRESOURCE(IDC_CURSOR1));
+	WndClass.hIcon=(HICON)Icon.get();
+	WndClass.hIconSm=(HICON)IconSmall.get();
+	WndClass.hCursor=(HCURSOR)Cursor.get();
 	WndClass.lpszClassName=L"MyazoMainWindow";	
 	MainWindow=DialogWindow(WndClass);
 	if(!MainWindow.Register()) return false;
@@ -99,6 +91,23 @@ bool Myazo::InitWindow(void)
 	WndClass.lpszClassName=L"MyazoAuthWindow";
 	AuthWindow=DialogWindow(WndClass);
 	if(!AuthWindow.Register()) return false;
+	return true;
+}
+
+bool Myazo::InitWindow(void)
+{
+	int X,Y,Width,Height;
+	FirstBoot=false;
+	X=GetSystemMetrics(SM_XVIRTUALSCREEN);
+	Y=GetSystemMetrics(SM_YVIRTUALSCREEN);
+	Width=GetSystemMetrics(SM_CXVIRTUALSCREEN);
+	Height=GetSystemMetrics(SM_CYVIRTUALSCREEN);
+	if(!MainWindow.Create(AppName.c_str(),WS_POPUP,WS_EX_TRANSPARENT|WS_EX_TOOLWINDOW|WS_EX_TOPMOST,0,0,0,0)) return false;
+	MainWindow.Move(X,Y,Width,Height,false);
+	MainWindow.ShowAndUpdate(SW_SHOW);
+	MainWindow.Focus();
+	if(!LayerWindow.Create(AppName.c_str(),WS_POPUP,WS_EX_TOOLWINDOW|WS_EX_LAYERED|WS_EX_TOPMOST|WS_EX_NOACTIVATE,0,0,0,0)) return false;
+	SetLayeredWindowAttributes(LayerWindow.GetWindowHandle(),RGB(255,0,0),100,LWA_COLORKEY|LWA_ALPHA);
 	return true;
 }
 
@@ -127,6 +136,15 @@ void Myazo::InitSetting(void)
 	auto Setting=JsonParser.Parse(ReadSettingFile());
 	UserID=Setting(L"userid");
 	PassWord=Setting(L"password");
+	return;
+}
+
+void Myazo::SaveSetting(void)
+{
+	Json::Item Setting(Json::Type::Hash);
+	Setting.Hash().insert(Json::JsonHashPair(L"userid",UserID));
+	Setting.Hash().insert(Json::JsonHashPair(L"password",PassWord));
+	WriteSettingFile(JsonParser.Create(Setting));
 	return;
 }
 

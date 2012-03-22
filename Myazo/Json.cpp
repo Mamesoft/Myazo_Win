@@ -31,7 +31,7 @@ namespace Json
 							Position+=4;
 							Converter.str(std::wstring(Position-3,Position+1));
 							int Char;
-							return Converter>>Char,Converter.clear(),(wchar_t)Char;
+							return (Converter>>Char).clear(),(wchar_t)Char;
 						}():
 					Char==L'\"'?L'\"':
 					Char==L'\\'?L'\\':
@@ -77,7 +77,7 @@ namespace Json
 				[&](void)->const wchar_t*
 				{
 					Converter.str(std::wstring());
-					return Converter<<L"\\u"<<(int)Char,Converter.clear(),Converter.str().c_str();
+					return (Converter<<L"\\u"<<(int)Char).clear(),Converter.str().c_str();
 				}();
 		}
 		EscapeString+=L"\"";

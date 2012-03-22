@@ -6,15 +6,17 @@
 class Myazo
 {
 private:
+	typedef std::shared_ptr<void> Handle;
+
 	HINSTANCE Instance;
-	bool UploadAsPrivate,UtilityMode,CaptureStarted;
+	bool UploadAsPrivate,UtilityMode,CaptureStarted,FirstBoot;
 	PNGFile ImageEncoder;
 	DialogWindow MainWindow,LayerWindow,AuthWindow;
 	std::array<Window,10> Controls;
 	RECT CaptureRect;
 	std::shared_ptr<Gdiplus::Font> LayerWindowFont,UIFont;
 	const std::wstring AppName,UserAgent,Boundary,DefaultHeader,UploadDomain,UploadScriptPath,SettingFileName;
-	std::wstring UserID,PassWord,SettingDirectory;
+	std::wstring UserID,PassWord,SettingFileDirectory;
 	Json::Parser JsonParser;
 
 	Myazo(const Myazo&);
@@ -22,9 +24,11 @@ private:
 	static LRESULT __stdcall WndProc(HWND WindowHandle,unsigned int Message,WPARAM WParam,LPARAM LParam);
 	static LRESULT __stdcall LayerWndProc(HWND WindowHandle,unsigned int Message,WPARAM WParam,LPARAM LParam);
 	static LRESULT __stdcall AuthWndProc(HWND WindowHandle,unsigned int Message,WPARAM WParam,LPARAM LParam);
+	bool InitWindowClass(void);
 	bool InitWindow(void);
 	bool InitAuthWindow(void);
 	void InitSetting(void);
+	void SaveSetting(void);
 	void ProcessKeyMessage(int VirtualKeyChar);
 	void ProcessCommandMessage(int ID);
 	void Encrypt(std::vector<wchar_t>& Data);
@@ -32,6 +36,7 @@ private:
 	std::wstring ReadSettingFile(void);
 	void WriteSettingFile(const std::wstring& FileContent);
 	Json::Item Authenticate(const std::wstring& UserID,const std::wstring& PassWord);
+	void OpenAuthWindow(void);
 	void SetClipboardText(const std::wstring& Test);
 	void MoveLayerWindow(void);
 	void DrawLayerWindowContent(void);
@@ -44,7 +49,8 @@ private:
 	void OpenUrl(const std::wstring& Url);
 	bool IsImageFile(const std::wstring& FileName);
 	bool IsValidImageUrl(const std::wstring& Url);
-	int UploadImageFile(const std::wstring& FileName);
+	bool UploadImageFile(const std::wstring& FileName);
+	void CheckArgumentOrUpload(void);
 	std::wstring ToUnicode(const std::string& MultiByteString);
 	std::wstring ToUnicode(const std::vector<char>& MultiByteBuffer);
 	std::string ToMultiByte(const std::wstring& UnicodeString);

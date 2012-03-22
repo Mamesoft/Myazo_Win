@@ -66,5 +66,8 @@
     <None Include="myazo.cur">
       <Filter>リソース ファイル</Filter>
     </None>
+    <None Include="Myazo.ico">
+      <Filter>リソース ファイル</Filter>
+    </None>
   </ItemGroup>
 </Project>
