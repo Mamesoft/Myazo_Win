@@ -7,7 +7,7 @@ Myazo::Myazo(const Myazo&)
 
 Myazo::Myazo(void):
 AppName(L"Myazo"),
-UserAgent(AppName+L"_win/0.00"),
+UserAgent(AppName+L"_win/1.00"),
 Boundary(L"h-o-g-e-p-i-y-o"),
 DefaultHeader(L"Content-Type: multipart/form-data; boundary="+Boundary),
 UploadDomain(L"myazo.net"),

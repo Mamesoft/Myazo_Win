@@ -202,7 +202,7 @@ void Myazo::MoveLayerWindow(void)
 {
 	LayerWindow.Move(CaptureRect.left<CaptureRect.right?CaptureRect.left:CaptureRect.right,
 		CaptureRect.top<CaptureRect.bottom?CaptureRect.top:CaptureRect.bottom,
-		std::abs(CaptureRect.right-CaptureRect.left+1),std::abs(CaptureRect.bottom-CaptureRect.top+1),true);
+		std::abs(CaptureRect.right-CaptureRect.left)+1,std::abs(CaptureRect.bottom-CaptureRect.top)+1,true);
 	return;
 }
 
@@ -271,8 +271,8 @@ std::shared_ptr<IStream> Myazo::GetScreenShot(void)
 	HDC DesktopDC=GetDC(nullptr),CaptureDC=CreateCompatibleDC(DesktopDC);
 	unsigned int X=CaptureRect.left<CaptureRect.right?CaptureRect.left:CaptureRect.right,
 		Y=CaptureRect.top<CaptureRect.bottom?CaptureRect.top:CaptureRect.bottom,
-		Width=std::abs(CaptureRect.right-CaptureRect.left+1),
-		Height=std::abs(CaptureRect.bottom-CaptureRect.top+1);
+		Width=std::abs(CaptureRect.right-CaptureRect.left)+1,
+		Height=std::abs(CaptureRect.bottom-CaptureRect.top)+1;
 	HBITMAP CaptureBitmapHandle=CreateCompatibleBitmap(DesktopDC,Width,Height),
 		PrevBitmapHandle=(HBITMAP)SelectObject(CaptureDC,CaptureBitmapHandle);
 	BitBlt(CaptureDC,0,0,Width,Height,DesktopDC,X,Y,SRCCOPY);
