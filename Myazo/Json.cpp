@@ -100,7 +100,7 @@ namespace Json
 			JsonString+=L'[';
 			IteratorLevel.push(IteratorContainer(Root.Array().cbegin()));
 		}else if(Root.Type()==Type::Null) return JsonString;
-		else throw std::exception("”z—ñ–”‚Í˜A‘z”z—ñ‚ð•\‚·Œ^‚ÍAJson::Array\n–”‚ÍJson::Hash‚Å‚È‚¯‚ê‚Î‚È‚è‚Ü‚¹‚ñB");
+		else throw std::exception("ï¿½zï¿½ñ–”‚Í˜Aï¿½zï¿½zï¿½ï¿½ï¿½ï¿½ï¿½\ï¿½ï¿½ï¿½^ï¿½ÌAJson::Array\nï¿½ï¿½ï¿½ï¿½Json::Hashï¿½Å‚È‚ï¿½ï¿½ï¿½ï¿½Î‚È‚ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½ï¿½B");
 		Level.push(Root);
 		while(Level.size()>0){
 			Type ObjType=Level.top().Type();
@@ -195,7 +195,7 @@ namespace Json
 					IteratorLevel.pop();
 					if(Level.size()>0) JsonString+=L',';
 				}
-			}else throw std::exception("”z—ñ–”‚Í˜A‘z”z—ñ‚ð•\‚·Œ^‚ÍAJson::Array\n–”‚ÍJson::Hash‚Å‚È‚¯‚ê‚Î‚È‚è‚Ü‚¹‚ñB");
+			}else throw std::exception("ï¿½zï¿½ñ–”‚Í˜Aï¿½zï¿½zï¿½ï¿½ï¿½ï¿½ï¿½\ï¿½ï¿½ï¿½^ï¿½ÌAJson::Array\nï¿½ï¿½ï¿½ï¿½Json::Hashï¿½Å‚È‚ï¿½ï¿½ï¿½ï¿½Î‚È‚ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½ï¿½B");
 		}
 		return JsonString;
 	}
@@ -210,7 +210,7 @@ namespace Json
 		do{
 			if(*Char==L'{') Root=Item(Type::Hash);
 			else if(*Char==L'[') Root=Item(Type::Array);
-			else if(*Char!=L' '&&*Char!=L'\t'&&*Char!=L'\n'&&*Char!=L'\r') throw std::exception("•s³‚È•¶Žš‚ªŠÜ‚Ü‚ê‚Ä‚¢‚Ü‚·B");
+			else if(*Char!=L' '&&*Char!=L'\t'&&*Char!=L'\n'&&*Char!=L'\r') throw std::exception("ï¿½sï¿½ï¿½ï¿½È•ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü‚Ü‚ï¿½ï¿½Ä‚ï¿½ï¿½Ü‚ï¿½ï¿½B");
 		}while(Root.Type()==Type::Null&&++Char!=JsonString.cend());
 		Level.push(Root);
 		do{
@@ -239,8 +239,7 @@ namespace Json
 						Converter.str(std::wstring(Start,Char--));
 						Converter>>Obj.Double();
 						Level.top().Hash().insert(std::make_pair(Key,Obj));
-					}else throw std::exception("”ŽšˆÈŠO‚Ì•¶Žš‚ª“ü‚Á‚Ä‚¢‚éA‚Ü‚½‚Í•s³‚È”’lŒ`Ž®‚Ì•¶Žš—ñ‚Å‚·B\nJSON‚Ì”’l•¶Žš—ñ‚Í10i”‚Å‹Lq‚µ‚È‚¯‚ê‚Î‚È‚è‚Ü‚¹‚ñB");
-					Char--;
+					}else throw std::exception("ï¿½ï¿½ï¿½ï¿½ï¿½ÈŠOï¿½Ì•ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ï¿½Aï¿½Ü‚ï¿½ï¿½Í•sï¿½ï¿½ï¿½Èï¿½ï¿½lï¿½`ï¿½ï¿½ï¿½Ì•ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å‚ï¿½ï¿½B\nJSONï¿½Ìï¿½ï¿½lï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½10ï¿½iï¿½ï¿½ï¿½Å‹Lï¿½qï¿½ï¿½ï¿½È‚ï¿½ï¿½ï¿½ï¿½Î‚È‚ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½ï¿½B");
 				}else if(*Char==L't'||*Char==L'f'){
 					Level.top().Hash().insert(std::make_pair(Key,Item(ParseBool(Char))));
 				}else if(*Char==L'{'){
@@ -270,7 +269,7 @@ namespace Json
 						Converter.str(std::wstring(Start,Char));
 						Converter>>Obj.Double();
 						Level.top().Array().push_back(Obj);
-					}else throw std::exception("”ŽšˆÈŠO‚Ì•¶Žš‚ª“ü‚Á‚Ä‚¢‚éA‚Ü‚½‚Í•s³‚È”’lŒ`Ž®‚Ì•¶Žš—ñ‚Å‚·B\nJSON‚Ì”’l•¶Žš—ñ‚Í10i”‚Å‹Lq‚µ‚È‚¯‚ê‚Î‚È‚è‚Ü‚¹‚ñB");
+					}else throw std::exception("ï¿½ï¿½ï¿½ï¿½ï¿½ÈŠOï¿½Ì•ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ï¿½Aï¿½Ü‚ï¿½ï¿½Í•sï¿½ï¿½ï¿½Èï¿½ï¿½lï¿½`ï¿½ï¿½ï¿½Ì•ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å‚ï¿½ï¿½B\nJSONï¿½Ìï¿½ï¿½lï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½10ï¿½iï¿½ï¿½ï¿½Å‹Lï¿½qï¿½ï¿½ï¿½È‚ï¿½ï¿½ï¿½ï¿½Î‚È‚ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½ï¿½B");
 					Char--;
 				}else if(*Char==L't'||*Char==L'f'){
 					Level.top().Array().push_back(Item(ParseBool(Char)));
