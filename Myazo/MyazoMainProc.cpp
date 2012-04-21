@@ -383,19 +383,16 @@ bool Myazo::UploadImageFile(const std::wstring& FileName)
 	}
 }
 
-void Myazo::CheckArgumentOrUpload(void)
+bool Myazo::CheckArgumentOrUpload(void)
 {
-	if(__argc==2&&PathFileExists(__wargv[1])&&IsImageFile(__wargv[1])){
-		int ExitCode=0;
-		if(UploadImageFile(__wargv[1])) ExitCode=0;
-		else{
-			MessageBox(nullptr,L"指定されたファイルが存在しない、または画像ファイルではありません。",AppName.c_str(),MB_OK|MB_ICONERROR);
-			ExitCode=1;
-		}
-		SaveSetting();
-		ExitProcess(ExitCode);
+	if(__argc==2){
+		if(PathFileExists(__wargv[1])&&IsImageFile(__wargv[1])){
+			UploadImageFile(__wargv[1]);
+			SaveSetting();
+		}else MessageBox(nullptr,L"指定されたファイルが存在しない、または画像ファイルではありません。",AppName.c_str(),MB_OK|MB_ICONERROR);
+		return true;
 	}
-	return;
+	return false;
 }
 
 std::wstring Myazo::ToUnicode(const std::string& MultiByteString)

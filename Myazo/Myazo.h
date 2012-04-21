@@ -50,7 +50,7 @@ private:
 	bool IsImageFile(const std::wstring& FileName);
 	bool IsValidImageUrl(const std::wstring& Url);
 	bool UploadImageFile(const std::wstring& FileName);
-	void CheckArgumentOrUpload(void);
+	bool CheckArgumentOrUpload(void);
 	std::wstring ToUnicode(const std::string& MultiByteString);
 	std::wstring ToUnicode(const std::vector<char>& MultiByteBuffer);
 	std::string ToMultiByte(const std::wstring& UnicodeString);

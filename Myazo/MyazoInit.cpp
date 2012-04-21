@@ -54,10 +54,7 @@ bool Myazo::Init(void)
 	if(!InitWindowClass()) return false;
 	InitSetting();
 	if(FirstBoot) OpenAuthWindow();
-	else{
-		CheckArgumentOrUpload();
-		if(!InitWindow()) return false;
-	}
+	else if(CheckArgumentOrUpload()||!InitWindow()) return false;
 	LayerWindowFont.reset(new Gdiplus::Font(L"Tahoma",8));
 	UIFont.reset(new Gdiplus::Font(L"MS UI Gothic",9.75f));
 	return true;
