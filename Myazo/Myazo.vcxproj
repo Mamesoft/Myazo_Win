@@ -81,8 +81,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Json.cpp" />
-    <ClCompile Include="JsonItem.cpp" />
     <ClCompile Include="MyazoInit.cpp" />
     <ClCompile Include="MyazoMainProc.cpp" />
     <ClCompile Include="PNGFile.cpp" />
@@ -90,7 +88,7 @@
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Json.h" />
+    <ClInclude Include="Json.hpp" />
     <ClInclude Include="Myazo.h" />
     <ClInclude Include="PNGFile.h" />
     <ClInclude Include="resource.h" />

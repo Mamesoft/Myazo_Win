@@ -1,6 +1,6 @@
 #include "ShareHeaders.h"
 #include "Window.h"
-#include "Json.h"
+#include "Json.hpp"
 #include "PNGFile.h"
 
 class Myazo
@@ -17,7 +17,6 @@ private:
 	std::shared_ptr<Gdiplus::Font> LayerWindowFont,UIFont;
 	const std::wstring AppName,UserAgent,Boundary,DefaultHeader,UploadDomain,UploadScriptPath,SettingFileName;
 	std::wstring UserID,PassWord,SettingFileDirectory;
-	Json::Parser JsonParser;
 
 	Myazo(const Myazo&);
 	Myazo(void);

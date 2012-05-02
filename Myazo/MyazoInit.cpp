@@ -7,7 +7,7 @@ Myazo::Myazo(const Myazo&)
 
 Myazo::Myazo(void):
 AppName(L"Myazo"),
-UserAgent(AppName+L"_win/1.00"),
+UserAgent(AppName+L"_win/1.01"),
 Boundary(L"h-o-g-e-p-i-y-o"),
 DefaultHeader(L"Content-Type: multipart/form-data; boundary="+Boundary),
 UploadDomain(L"myazo.net"),
@@ -130,7 +130,7 @@ bool Myazo::InitAuthWindow(void)
 
 void Myazo::InitSetting(void)
 {
-	auto Setting=JsonParser.Parse(ReadSettingFile());
+	auto Setting=Json::Parse(ReadSettingFile());
 	UserID=Setting(L"userid");
 	PassWord=Setting(L"password");
 	return;
@@ -141,7 +141,7 @@ void Myazo::SaveSetting(void)
 	Json::Item Setting(Json::Type::Hash);
 	Setting.Hash().insert(Json::JsonHashPair(L"userid",UserID));
 	Setting.Hash().insert(Json::JsonHashPair(L"password",PassWord));
-	WriteSettingFile(JsonParser.Create(Setting));
+	WriteSettingFile(Json::ToString(Setting));
 	return;
 }
 

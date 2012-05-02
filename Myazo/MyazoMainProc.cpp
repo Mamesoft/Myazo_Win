@@ -330,9 +330,9 @@ Json::Item Myazo::Upload(const std::string& Message,const std::wstring& Header,c
 		HttpEndRequest(RequestHandle.get(),nullptr,0,0);
 		std::vector<char> Temp(1024,0);
 		InternetReadFile(RequestHandle.get(),Temp.data(),Temp.size(),&WrittenSize);
-		return JsonParser.Parse(ToUnicode(Temp));
+		return Json::Parse(ToUnicode(Temp));
 	}
-	return Json::Item(Json::Type::Null);
+	return Json::Parse(L"{\"error\":true,\"errormessage\":\"リクエストの送信に失敗しました\"}");
 }
 
 void Myazo::OpenUrl(const std::wstring& Url)
@@ -378,7 +378,7 @@ bool Myazo::UploadImageFile(const std::wstring& FileName)
 		return true;
 	}else{
 		MessageBox(nullptr,Result(L"errormessage").String().c_str(),AppName.c_str(),MB_OK|MB_ICONERROR);
-		if(Result.Hash().find(L"printurl")!=Result.Hash().end()) OpenUrl(Result(L"printurl"));
+		if(!Result(L"printurl").IsNull()) OpenUrl(Result(L"printurl"));
 		return false;
 	}
 }
