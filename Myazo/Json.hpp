@@ -7,7 +7,6 @@
 #include <stack>
 #include <regex>
 #include <sstream>
-#include <tuple>
 #include <memory>
 #ifdef _VisualCpp
 #define _Export __declspec(dllexport)

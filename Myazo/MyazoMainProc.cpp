@@ -92,7 +92,7 @@ void Myazo::ProcessCommandMessage(int ID)
 {
 	if(AuthWindow.IsExistControl(ID)){
 		auto Control=AuthWindow(ID);
-		if(Control==Controls[5]) OpenUrl(L"http://myazo.net/start/");
+		if(Control==Controls[5]) OpenUrl(L"http://myazo.net/start");
 		else if(Control==Controls[6]){
 			auto Result=Authenticate(Controls[2].GetCaption(),Controls[4].GetCaption());
 			if(!Result(L"error")){
