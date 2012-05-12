@@ -98,7 +98,7 @@ void Myazo::ProcessCommandMessage(int ID)
 			if(!Result(L"error")){
 				MessageBox(AuthWindow.GetWindowHandle(),L"認証に成功しました。",AppName.c_str(),MB_OK|MB_ICONINFORMATION);
 				UserID=Controls[2].GetCaption();
-				PassWord=Controls[4].GetCaption();
+				PassWord=Controls[4].GetCaption();                                          
 				AuthWindow.Message(WM_CLOSE,0,0);
 			}else{
 				MessageBox(AuthWindow.GetWindowHandle(),Result(L"errormessage").String().c_str(),AppName.c_str(),MB_OK|MB_ICONERROR);
@@ -332,7 +332,10 @@ Json::Item Myazo::Upload(const std::string& Message,const std::wstring& Header,c
 		InternetReadFile(RequestHandle.get(),Temp.data(),Temp.size(),&WrittenSize);
 		return Json::Parse(ToUnicode(Temp));
 	}
-	return Json::Parse(L"{\"error\":true,\"errormessage\":\"リクエストの送信に失敗しました\"}");
+	Json::Item Error(Json::Type::Hash);
+	Error(L"error")=true;
+	Error(L"errormessage")=L"リクエストの送信に失敗しました";
+	return Error;
 }
 
 void Myazo::OpenUrl(const std::wstring& Url)
