@@ -102,7 +102,7 @@ void Myazo::ProcessCommandMessage(int ID)
 				AuthWindow.Message(WM_CLOSE,0,0);
 			}else{
 				MessageBox(AuthWindow.GetWindowHandle(),Result(L"errormessage").String().c_str(),AppName.c_str(),MB_OK|MB_ICONERROR);
-				if(Result.Hash().find(L"printurl")!=Result.Hash().end()) OpenUrl(Result(L"printurl"));
+				if(!Result(L"printurl").IsNull()) OpenUrl(Result(L"printurl"));
 			}
 		}else if(Control==Controls[7]) AuthWindow.Message(WM_CLOSE,0,0);
 	}
@@ -261,7 +261,7 @@ void Myazo::EndCapture(int X,int Y)
 		SetClipboardText(Result(L"imgurl"));
 	}else{
 		MessageBox(nullptr,Result(L"errormessage").String().c_str(),AppName.c_str(),MB_OK|MB_ICONERROR);
-		if(Result.Hash().find(L"printurl")!=Result.Hash().end()) OpenUrl(Result(L"printurl"));
+		if(!Result(L"printurl").IsNull()) OpenUrl(Result(L"printurl"));
 	}
 	return;
 }
@@ -330,11 +330,12 @@ Json::Item Myazo::Upload(const std::string& Message,const std::wstring& Header,c
 		HttpEndRequest(RequestHandle.get(),nullptr,0,0);
 		std::vector<char> Temp(1024,0);
 		InternetReadFile(RequestHandle.get(),Temp.data(),Temp.size(),&WrittenSize);
-		return Json::Parse(ToUnicode(Temp));
+		auto Result=Json::Parse(ToUnicode(Temp));
+		if(!Result.IsNull()) return Result;
 	}
 	Json::Item Error(Json::Type::Hash);
 	Error(L"error")=true;
-	Error(L"errormessage")=L"リクエストの送信に失敗しました";
+	Error(L"errormessage")=L"リクエストの送信に失敗しました。\nサーバーがメンテナンス中の可能性があります。";
 	return Error;
 }
 

@@ -70,6 +70,11 @@ namespace Json
 				return;
 			}
 
+			Values(const wchar_t* String):String_Value(String)
+			{
+				return;
+			}
+
 			Values(const JsonHash& Hash):Hash_Value(Hash)
 			{
 				return;
@@ -190,6 +195,12 @@ namespace Json
 		}
 
 		Item(const JsonString& String):Value(std::make_shared<Values>(String))
+		{
+			Type_Value=Type::String;
+			return;
+		}
+
+		Item(const wchar_t* String):Value(std::make_shared<Values>(String))
 		{
 			Type_Value=Type::String;
 			return;
@@ -344,9 +355,9 @@ namespace Json
 
 		Item& operator=(const Item& LeftRef)
 		{
-			Json::Type ItemType=LeftRef.GetType();
+			Type_Value=LeftRef.GetType();
 			Value=LeftRef.Value;
-			IsNull_Value=ItemType==Type::Null?true:false;
+			IsNull_Value=Type_Value==Type::Null?true:false;
 			return *this;
 		}
 
@@ -668,7 +679,7 @@ namespace Json
 			JsonString+=L'[';
 			IteratorLevel.push(IteratorContainer(Root.Array().cbegin()));
 		}else if(Root.GetType()==Type::Null) return JsonString;
-		else throw std::exception(/*"配列又は連想配列を表す型は、Json::Array\n又はJson::Hashでなければなりません。"*/);
+		else return Item();
 		Level.push(Root);
 		while(Level.size()>0){
 			Type ObjType=Level.top().GetType();
@@ -763,7 +774,7 @@ namespace Json
 					IteratorLevel.pop();
 					if(Level.size()>0) JsonString+=L',';
 				}
-			}else throw std::exception(/*"配列又は連想配列を表す型は、Json::Array\n又はJson::Hashでなければなりません。"*/);
+			}else return Item();
 		}
 		return JsonString;
 	}
@@ -778,10 +789,11 @@ namespace Json
 		do{
 			if(*Char==L'{') Root=Item(Type::Hash);
 			else if(*Char==L'[') Root=Item(Type::Array);
-			else if(*Char!=L' '&&*Char!=L'\t'&&*Char!=L'\n'&&*Char!=L'\r') throw std::exception(/*"不正な文字が含まれています。"*/);
+			else if(*Char!=L' '&&*Char!=L'\t'&&*Char!=L'\n'&&*Char!=L'\r') return Item();
 		}while(Root.GetType()==Type::Null&&++Char!=JsonString.cend());
 		Level.push(Root);
 		do{
+			if(Char==JsonString.cend()) return Item();
 			Char++;
 			if(*Char==L','||*Char==L' '||*Char==L'\t'||*Char==L'\n'||*Char==L'\r') continue;
 			Type ObjType=Level.top().GetType();
@@ -807,7 +819,7 @@ namespace Json
 						double Temp;
 						Converter>>Temp;
 						Level.top().Hash().insert(std::make_pair(Key,Item(Temp)));
-					}else throw std::exception(/*"数字以外の文字が入っている、または不正な数値形式の文字列です。\nJSONの数値文字列は10進数で記述しなければなりません。"*/);
+					}else return Item();
 				}else if(*Char==L't'||*Char==L'f'){
 					Level.top().Hash().insert(std::make_pair(Key,Item(ParseBool(Char))));
 				}else if(*Char==L'{'){
@@ -837,7 +849,7 @@ namespace Json
 						double Temp;
 						Converter>>Temp;
 						Level.top().Array().push_back(Item(Temp));
-					}else throw std::exception(/*"数字以外の文字が入っている、または不正な数値形式の文字列です。\nJSONの数値文字列は10進数で記述しなければなりません。"*/);
+					}else return Item();
 					Char--;
 				}else if(*Char==L't'||*Char==L'f'){
 					Level.top().Array().push_back(Item(ParseBool(Char)));
@@ -853,7 +865,7 @@ namespace Json
 					Level.top().Array().push_back(ParseNull(Char)?Item(Type::Null):throw std::exception());
 				}else if(*Char==L']') Level.pop();
 			}
-		}while(Level.size()!=0&&Char!=JsonString.cend());
+		}while(Level.size()!=0);
 		return Root;
 	}
 
